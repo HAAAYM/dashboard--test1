@@ -18,7 +18,7 @@ import {
   Trash2,
   FileText
 } from 'lucide-react';
-import { GroupPost, GroupPostType } from '../groups-types';
+import { GroupPost, GroupPostType, PostVisibility } from '../groups-types';
 import { Group } from '../groups-types';
 import { User } from '@/types';
 import { UserRole } from '@/lib/permissions/roles';
@@ -93,6 +93,36 @@ export function GroupMessagesTab({ group, currentUser }: GroupMessagesTabProps) 
         return 'bg-orange-600';
       default:
         return 'bg-gray-600';
+    }
+  };
+
+  const handleSubmitForPublishing = async (post: GroupPost) => {
+    if (!currentUser || !canManageMessages) return;
+    
+    const confirmed = window.confirm(
+      `Submit "${post.content.substring(0, 50)}${post.content.length > 50 ? '...' : ''}" for global publishing?`
+    );
+    
+    if (!confirmed) return;
+
+    try {
+      const result = await groupsService.submitPublishRequest(post.id, group.id, currentUser.id);
+      if (result.success) {
+        toast.success('Post submitted for global publishing');
+        // Optimistic update: update local state immediately
+        setPosts(prev => prev.map(p => 
+          p.id === post.id ? { ...p, visibility: 'requested_global' as PostVisibility } : p
+        ));
+        // Refresh posts to show updated visibility
+        const postsResult = await groupsService.getGroupPosts(group.id);
+        if (postsResult.success && postsResult.data) {
+          setPosts(postsResult.data);
+        }
+      } else {
+        toast.error(result.error || 'Failed to submit post for publishing');
+      }
+    } catch (err) {
+      toast.error('Failed to submit post for publishing');
     }
   };
 
@@ -240,9 +270,16 @@ export function GroupMessagesTab({ group, currentUser }: GroupMessagesTabProps) 
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={(post.visibility || 'group_only') === 'published_global' ? "default" : "secondary"}>
-                      {(post.visibility || 'group_only') === 'published_global' ? "Published" : "Group Only"}
-                    </Badge>
+                    <Badge variant={
+  (post.visibility || 'group_only') === 'published_global' ? "default" : 
+  (post.visibility || 'group_only') === 'requested_global' ? "secondary" : "secondary"
+}>
+  {
+    (post.visibility || 'group_only') === 'published_global' ? "Published" : 
+    (post.visibility || 'group_only') === 'requested_global' ? "Pending Review" : 
+    "Group Only"
+  }
+</Badge>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
@@ -259,6 +296,24 @@ export function GroupMessagesTab({ group, currentUser }: GroupMessagesTabProps) 
                       <DropdownMenuContent align="end" className="w-48">
                         {canManageMessages && (
                           <>
+                            {post.visibility === 'group_only' ? (
+                              <DropdownMenuItem 
+                                onClick={() => handleSubmitForPublishing(post)}
+                                className="text-blue-600"
+                              >
+                                <FileText className="h-4 w-4 mr-2" />
+                                Submit for Global Publishing
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem 
+                                disabled
+                                className="text-muted-foreground"
+                                title="Already submitted or published"
+                              >
+                                <FileText className="h-4 w-4 mr-2" />
+                                Submit for Global Publishing
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem 
                               onClick={() => handleDeletePost(post)}
                               className="text-red-600"

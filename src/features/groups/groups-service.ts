@@ -1753,6 +1753,14 @@ export const groupsService = {
     try {
       await new Promise(resolve => setTimeout(resolve, 400));
       
+      // Check if request already exists for this post
+      const existingRequest = mockPublishRequestsStore.find(
+        req => req.postId === postId && req.status === 'pending'
+      );
+      if (existingRequest) {
+        return { success: false, error: 'Publish request already exists for this post' };
+      }
+      
       // Create new publish request
       const newRequest: PublishRequest = {
         id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -1869,3 +1877,4 @@ export const groupsService = {
     }
   }
 };
+  
