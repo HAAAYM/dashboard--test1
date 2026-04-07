@@ -34,6 +34,9 @@ export function GroupMessagesTab({ group, currentUser }: GroupMessagesTabProps) 
   const [posts, setPosts] = useState<GroupPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'group_only' | 'requested_global' | 'published_global'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const canManageMessages = currentUser?.role === UserRole.ADMIN || 
                            currentUser?.role === UserRole.SUPER_ADMIN || 
@@ -210,6 +213,35 @@ export function GroupMessagesTab({ group, currentUser }: GroupMessagesTabProps) 
     );
   }
 
+  const filteredPosts = (filter === 'all' ? posts : posts.filter(p => (p.visibility || 'group_only') === filter))
+            .filter(post => {
+              const searchLower = searchTerm.toLowerCase();
+              return !searchTerm || 
+                (post.authorName || '').toLowerCase().includes(searchLower) ||
+                (post.content || '').toLowerCase().includes(searchLower);
+            })
+            .sort((a, b) => {
+              const dateA = new Date(a.createdAt).getTime();
+              const dateB = new Date(b.createdAt).getTime();
+              return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+            });
+
+  if (filteredPosts.length === 0 && posts.length > 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-12">
+            <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No messages match the current filters.</h3>
+            <p className="text-muted-foreground">
+              Try adjusting your search terms or filter selection.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -229,6 +261,74 @@ export function GroupMessagesTab({ group, currentUser }: GroupMessagesTabProps) 
         </div>
       </CardHeader>
       <CardContent>
+        <div className="flex flex-col gap-3 mb-4">
+          <div className="w-full mb-2">
+            <input
+              type="text"
+              placeholder="Search by author or content..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant={filter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter('all')}
+            >
+              All
+            </Button>
+            <Button 
+              variant={filter === 'group_only' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter('group_only')}
+            >
+              Group Only
+            </Button>
+            <Button 
+              variant={filter === 'requested_global' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter('requested_global')}
+            >
+              Pending Review
+            </Button>
+            <Button 
+              variant={filter === 'published_global' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter('published_global')}
+            >
+              Published
+            </Button>
+            <div className="ml-auto flex gap-2">
+              <Button 
+                variant={sortOrder === 'newest' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortOrder('newest')}
+              >
+                Newest
+              </Button>
+              <Button 
+                variant={sortOrder === 'oldest' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortOrder('oldest')}
+              >
+                Oldest
+              </Button>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Badge variant="secondary">
+              Group Only ({posts.filter(p => (p.visibility || 'group_only') === 'group_only').length})
+            </Badge>
+            <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+              Pending Review ({posts.filter(p => (p.visibility || 'group_only') === 'requested_global').length})
+            </Badge>
+            <Badge variant="default" className="bg-green-600">
+              Published ({posts.filter(p => (p.visibility || 'group_only') === 'published_global').length})
+            </Badge>
+          </div>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -241,7 +341,7 @@ export function GroupMessagesTab({ group, currentUser }: GroupMessagesTabProps) 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {posts.map((post) => {
+            {filteredPosts.map((post) => {
               const messageType = getMessageType(post);
               return (
                 <TableRow key={post.id}>
@@ -270,9 +370,13 @@ export function GroupMessagesTab({ group, currentUser }: GroupMessagesTabProps) 
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={
+                    <div className="flex items-center gap-2">
+                      <Badge variant={
   (post.visibility || 'group_only') === 'published_global' ? "default" : 
-  (post.visibility || 'group_only') === 'requested_global' ? "secondary" : "secondary"
+  (post.visibility || 'group_only') === 'requested_global' ? "outline" : "secondary"
+} className={
+  (post.visibility || 'group_only') === 'published_global' ? "bg-green-600" : 
+  (post.visibility || 'group_only') === 'requested_global' ? "bg-yellow-100 text-yellow-800 border-yellow-300" : ""
 }>
   {
     (post.visibility || 'group_only') === 'published_global' ? "Published" : 
@@ -280,6 +384,10 @@ export function GroupMessagesTab({ group, currentUser }: GroupMessagesTabProps) 
     "Group Only"
   }
 </Badge>
+                      {(post.visibility || 'group_only') === 'requested_global' && (
+                        <span className="text-xs text-yellow-600 font-medium">Awaiting approval</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">

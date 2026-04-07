@@ -37,6 +37,9 @@ export function GroupPublishRequestsTab({ group, currentUser }: GroupPublishRequ
   const [posts, setPosts] = useState<Record<string, GroupPost>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const canManageRequests = currentUser?.role === UserRole.ADMIN || 
                            currentUser?.role === UserRole.SUPER_ADMIN || 
@@ -193,9 +196,41 @@ export function GroupPublishRequestsTab({ group, currentUser }: GroupPublishRequ
         <CardContent className="pt-6">
           <div className="text-center py-12">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Publish Requests Found</h3>
+            <h3 className="text-lg font-semibold mb-2">No publish requests found.</h3>
             <p className="text-muted-foreground">
               This group doesn't have any pending publish requests.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const filteredRequests = (filter === 'all' ? requests : requests.filter(r => r.status === filter))
+            .filter(request => {
+              const relatedPost = posts[request.postId];
+              const searchLower = searchTerm.toLowerCase();
+              
+              return !searchTerm || 
+                request.requestedBy.toLowerCase().includes(searchLower) ||
+                (relatedPost?.authorName || '').toLowerCase().includes(searchLower) ||
+                (relatedPost?.content || '').toLowerCase().includes(searchLower);
+            })
+            .sort((a, b) => {
+              const dateA = new Date(a.createdAt).getTime();
+              const dateB = new Date(b.createdAt).getTime();
+              return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+            });
+
+  if (filteredRequests.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-12">
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No publish requests match the current filters.</h3>
+            <p className="text-muted-foreground">
+              Try adjusting your search terms or filter selection.
             </p>
           </div>
         </CardContent>
@@ -208,7 +243,54 @@ export function GroupPublishRequestsTab({ group, currentUser }: GroupPublishRequ
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Publish Requests ({requests.length})</CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex gap-2 mb-2">
+              <Button 
+                variant={filter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('all')}
+              >
+                All
+              </Button>
+              <Button 
+                variant={filter === 'pending' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('pending')}
+              >
+                Pending
+              </Button>
+              <Button 
+                variant={filter === 'approved' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('approved')}
+              >
+                Approved
+              </Button>
+              <Button 
+                variant={filter === 'rejected' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('rejected')}
+              >
+                Rejected
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant={sortOrder === 'newest' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortOrder('newest')}
+              >
+                Newest
+              </Button>
+              <Button 
+                variant={sortOrder === 'oldest' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortOrder('oldest')}
+              >
+                Oldest
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
             <Badge variant="outline">
               {requests.filter(req => req.status === 'pending').length} Pending
             </Badge>
@@ -219,9 +301,19 @@ export function GroupPublishRequestsTab({ group, currentUser }: GroupPublishRequ
               {requests.filter(req => req.status === 'rejected').length} Rejected
             </Badge>
           </div>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search by requester, author, or content..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -235,7 +327,7 @@ export function GroupPublishRequestsTab({ group, currentUser }: GroupPublishRequ
             </TableRow>
           </TableHeader>
           <TableBody>
-            {requests.map((request) => {
+            {filteredRequests.map((request) => {
               const relatedPost = posts[request.postId];
               return (
               <TableRow key={request.id}>
@@ -257,21 +349,31 @@ export function GroupPublishRequestsTab({ group, currentUser }: GroupPublishRequ
                     {relatedPost ? (
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{relatedPost.authorName}</span>
+                          <span className="text-sm font-medium">{relatedPost.authorName || 'Unknown'}</span>
                           <span className="text-xs text-muted-foreground">• {relatedPost.type}</span>
+                          <Badge variant="secondary" className="ml-2">
+                            {
+                              (relatedPost.visibility || 'group_only') === 'published_global' ? 'Published' : 
+                              (relatedPost.visibility || 'group_only') === 'requested_global' ? 'Pending Review' : 
+                              'Group Only'
+                            }
+                          </Badge>
                         </div>
-                        <p className="text-sm">{relatedPost.content.substring(0, 100)}{relatedPost.content.length > 100 ? '...' : ''}</p>
+                        <p className="text-sm">{(relatedPost.content || 'No content').substring(0, 80)}{(relatedPost.content || 'No content').length > 80 ? '...' : ''}</p>
                       </div>
                     ) : (
-                      <div className="text-sm text-muted-foreground">
-                        Post not found
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">Unknown</div>
+                        <div className="text-sm text-muted-foreground">Post not found</div>
+                        <div className="text-sm text-muted-foreground">-</div>
+                        <div className="text-sm text-muted-foreground">-</div>
                       </div>
                     )}
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">
-                    {relatedPost ? relatedPost.type.toUpperCase() : 'Unknown'}
+                    {relatedPost ? (relatedPost.type || '').toUpperCase() : '-'}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -288,8 +390,11 @@ export function GroupPublishRequestsTab({ group, currentUser }: GroupPublishRequ
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <div className="text-sm">
-                    {request.reviewedAt ? formatDate(request.reviewedAt) : 'Not reviewed'}
+                  <div className="text-sm space-y-1">
+                    {request.reviewedBy ? (
+                      <div className="text-xs text-muted-foreground">Reviewed by: {request.reviewedBy}</div>
+                    ) : null}
+                    <div>{request.reviewedAt ? formatDate(request.reviewedAt) : 'Not reviewed'}</div>
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
@@ -300,7 +405,15 @@ export function GroupPublishRequestsTab({ group, currentUser }: GroupPublishRequ
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      {request.status === 'pending' && canManageRequests && (
+                      {!canManageRequests ? (
+                        <DropdownMenuItem disabled className="text-muted-foreground">
+                          Insufficient permissions
+                        </DropdownMenuItem>
+                      ) : request.status !== 'pending' ? (
+                        <DropdownMenuItem disabled className="text-muted-foreground">
+                          Already reviewed
+                        </DropdownMenuItem>
+                      ) : (
                         <>
                           <DropdownMenuItem 
                             onClick={() => handleApproveRequest(request)}
@@ -317,18 +430,6 @@ export function GroupPublishRequestsTab({ group, currentUser }: GroupPublishRequ
                             Reject Request
                           </DropdownMenuItem>
                         </>
-                      )}
-                      
-                      {request.status !== 'pending' && (
-                        <DropdownMenuItem disabled className="text-muted-foreground">
-                          Request already {request.status}
-                        </DropdownMenuItem>
-                      )}
-                      
-                      {!canManageRequests && (
-                        <DropdownMenuItem disabled className="text-muted-foreground">
-                          Insufficient permissions
-                        </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
