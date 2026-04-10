@@ -24,9 +24,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
     
     if (!loading && isDashboardRoute) {
       if (!user) {
+        setIsChecking(false);
         router.push('/login');
       } else if (!isAdmin) {
         // User is authenticated but not an admin
+        setIsChecking(false);
         router.push('/unauthorized');
       } else {
         setIsChecking(false);

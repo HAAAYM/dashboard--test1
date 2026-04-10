@@ -79,15 +79,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleSignIn = async (email: string, password: string) => {
     try {
-      setLoading(true);
       setError(null);
       const authUser = await signIn(email, password);
       setUser(authUser);
     } catch (err: any) {
       setError(err.message);
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
 

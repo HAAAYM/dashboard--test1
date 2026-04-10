@@ -1,6 +1,6 @@
-import { getFirebase } from '@/lib/firebase/client-config';
-import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 
+import { getFirebase } from '@/lib/firebase/client-config';
+import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 export interface AdminSession {
   id: string;
   adminUid: string;

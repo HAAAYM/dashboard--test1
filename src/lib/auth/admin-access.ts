@@ -35,8 +35,11 @@ export async function checkAdminAccess(authUid: string): Promise<AdminAccessResu
     }
 
     // Query admin_users collection by authUid
-    const adminUserRef = doc(db, 'admin_users', authUid);
+    console.log('=== ADMIN ACCESS DEBUG ===');
+    console.log('checkAdminAccess called with authUid:', authUid);
     console.log('Reading Firestore path:', `admin_users/${authUid}`);
+    
+    const adminUserRef = doc(db, 'admin_users', authUid);
     
     const adminUserSnap = await getDoc(adminUserRef);
     console.log('Document exists:', adminUserSnap.exists());
@@ -75,8 +78,10 @@ export async function checkAdminAccess(authUid: string): Promise<AdminAccessResu
 
     console.log('SUCCESS: Admin access granted');
     return { success: true, adminUser };
-  } catch (error) {
+  } catch (error: any) {
     console.error('ERROR: Admin access check failed:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to check admin access' 
