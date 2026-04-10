@@ -29,13 +29,14 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 const navigation = [
   {
     title: 'Main',
     items: [
       {
-        title: 'Overview',
+        titleKey: 'sidebar.dashboard',
         url: '/dashboard',
         icon: LayoutDashboard,
       },
@@ -45,32 +46,32 @@ const navigation = [
     title: 'Management',
     items: [
       {
-        title: 'Users',
+        titleKey: 'sidebar.users',
         url: '/dashboard/users',
         icon: Users,
       },
       {
-        title: 'Groups',
+        titleKey: 'sidebar.groups',
         url: '/dashboard/groups',
         icon: Users2,
       },
       {
-        title: 'Feed Posts',
+        titleKey: 'sidebar.posts',
         url: '/dashboard/posts',
         icon: MessageSquare,
       },
       {
-        title: 'Verification',
+        titleKey: 'sidebar.verification',
         url: '/dashboard/verification',
         icon: ShieldCheck,
       },
       {
-        title: 'Reports',
+        titleKey: 'sidebar.reports',
         url: '/dashboard/reports',
         icon: Flag,
       },
       {
-        title: 'Library',
+        titleKey: 'sidebar.library',
         url: '/dashboard/library',
         icon: Library,
       },
@@ -80,12 +81,12 @@ const navigation = [
     title: 'Monitoring',
     items: [
       {
-        title: 'Live Activity',
+        titleKey: 'sidebar.live_activity',
         url: '/dashboard/live-activity',
         icon: Activity,
       },
       {
-        title: 'Audit Logs',
+        titleKey: 'sidebar.audit_logs',
         url: '/dashboard/audit-logs',
         icon: FileText,
       },
@@ -95,12 +96,12 @@ const navigation = [
     title: 'System',
     items: [
       {
-        title: 'AI Control',
+        titleKey: 'sidebar.ai_control',
         url: '/dashboard/ai-control',
         icon: Bot,
       },
       {
-        title: 'Settings',
+        titleKey: 'sidebar.settings',
         url: '/dashboard/settings',
         icon: Settings,
       },
@@ -108,11 +109,12 @@ const navigation = [
   },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ side = 'left' }: { side?: 'left' | 'right' }) {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   return (
-    <Sidebar variant="inset" className="border-r border-border">
+    <Sidebar variant="inset" side={side} className="border-r border-border">
       <SidebarHeader className="border-b border-border">
         <div className="flex items-center gap-2 px-4 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -134,7 +136,7 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
+                  <SidebarMenuItem key={item.titleKey}>
                     <SidebarMenuButton 
                       asChild 
                       isActive={pathname === item.url}
@@ -142,7 +144,7 @@ export function AppSidebar() {
                     >
                       <Link href={item.url} className="flex items-center gap-3">
                         <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
+                        <span>{t(item.titleKey)}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

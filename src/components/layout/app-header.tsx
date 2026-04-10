@@ -2,6 +2,7 @@
 
 import { Bell, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -34,6 +35,8 @@ export function AppHeader() {
           <Bell className="h-4 w-4" />
           <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full" />
         </Button>
+
+        <LanguageSwitcher />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

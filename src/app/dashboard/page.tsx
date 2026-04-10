@@ -4,11 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Users, Users2, MessageSquare, ShieldCheck, TrendingUp, Activity, FileText, Library } from 'lucide-react';
 import { mockDataService } from '@/lib/services/mock-data';
+import { useTranslation } from 'react-i18next';
 
 export default function OverviewPage() {
+  const { t } = useTranslation();
+  
   const stats = [
     {
-      title: 'Total Users',
+      titleKey: 'dashboard.totalUsers',
       value: '1,247',
       change: '+12%',
       changeType: 'positive' as const,
@@ -16,7 +19,7 @@ export default function OverviewPage() {
       description: 'Active registered users',
     },
     {
-      title: 'Active Groups',
+      titleKey: 'dashboard.totalGroups',
       value: '45',
       change: '+8%',
       changeType: 'positive' as const,
@@ -24,7 +27,7 @@ export default function OverviewPage() {
       description: 'Community groups',
     },
     {
-      title: 'Total Posts',
+      titleKey: 'dashboard.totalPosts',
       value: '1,234',
       change: '+23%',
       changeType: 'positive' as const,
@@ -32,7 +35,7 @@ export default function OverviewPage() {
       description: 'Feed posts this month',
     },
     {
-      title: 'Pending Verifications',
+      titleKey: 'dashboard.pendingVerifications',
       value: '23',
       change: '-5%',
       changeType: 'negative' as const,
@@ -96,19 +99,19 @@ export default function OverviewPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t('dashboard.overview')}</h1>
         <p className="text-muted-foreground">
-          Welcome to Edu Mate Admin Panel. Here's what's happening today.
+          {t('dashboard.welcome')}
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title} className="bg-card border-border">
+          <Card key={stat.titleKey} className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
+                {t(stat.titleKey)}
               </CardTitle>
               <stat.icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>

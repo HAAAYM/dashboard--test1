@@ -1,0 +1,49 @@
+{
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "groups": "Groups",
+    "users": "Users",
+    "posts": "Posts",
+    "library": "Library",
+    "feed": "Feed",
+    "reports": "Reports",
+    "settings": "Settings",
+    "ai_control": "AI Control",
+    "audit_logs": "Audit Logs",
+    "live_activity": "Live Activity",
+    "verification": "Verification"
+  },
+  "dashboard": {
+    "overview": "Overview",
+    "welcome": "Welcome back",
+    "totalUsers": "Total Users",
+    "totalGroups": "Total Groups",
+    "totalPosts": "Total Posts",
+    "recentActivity": "Recent Activity",
+    "quickActions": "Quick Actions",
+    "systemStatus": "System Status"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "account": "Account",
+    "preferences": "Preferences",
+    "language": "Language",
+    "theme": "Theme",
+    "notifications": "Notifications",
+    "security": "Security",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search"
+  }
+}

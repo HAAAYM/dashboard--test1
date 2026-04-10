@@ -9,23 +9,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, User, Shield, Bell, Database, Palette, Globe, Key } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t('settings.title')}</h1>
         <p className="text-muted-foreground">
-          Configure system settings and administrative preferences
+          {t('settings.general')}
         </p>
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="general">{t('settings.general')}</TabsTrigger>
+          <TabsTrigger value="security">{t('settings.security')}</TabsTrigger>
+          <TabsTrigger value="notifications">{t('settings.notifications')}</TabsTrigger>
+          <TabsTrigger value="appearance">{t('settings.theme')}</TabsTrigger>
           <TabsTrigger value="api">API</TabsTrigger>
           <TabsTrigger value="backup">Backup</TabsTrigger>
         </TabsList>
@@ -401,7 +404,7 @@ export default function SettingsPage() {
       <div className="flex justify-end gap-2">
         <Button variant="outline">Reset to Defaults</Button>
         <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-          Save Changes
+          {t('settings.save')}
         </Button>
       </div>
     </div>
