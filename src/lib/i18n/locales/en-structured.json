@@ -1,0 +1,193 @@
+{
+  "pages": {
+    "settings": {
+      "title": "Settings",
+      "description": "Manage platform settings",
+      "tabs": {
+        "general": "General",
+        "account": "Account", 
+        "preferences": "Preferences",
+        "language": "Language",
+        "theme": "Theme",
+        "notifications": "Notifications",
+        "security": "Security",
+        "appearance": "Appearance",
+        "api": "API",
+        "backup": "Backup"
+      },
+      "fields": {
+        "platformName": "Platform Name",
+        "adminEmail": "Admin Email",
+        "timezone": "Timezone",
+        "defaultLanguage": "Default Language",
+        "platformDescription": "Platform Description",
+        "sessionTimeout": "Session Timeout (minutes)",
+        "maxLoginAttempts": "Max Login Attempts",
+        "passwordMinLength": "Password Min Length",
+        "passwordExpiry": "Password Expiry (days)",
+        "customCss": "Custom CSS",
+        "webhookUrl": "Webhook URL"
+      },
+      "placeholders": {
+        "customCss": "Add custom CSS rules here...",
+        "webhookUrl": "https://your-app.com/webhook"
+      },
+      "switches": {
+        "maintenanceMode": "Maintenance Mode",
+        "twoFactorAuth": "Two-Factor Authentication",
+        "emailVerification": "Email Verification",
+        "ipWhitelist": "IP Whitelist",
+        "newUserRegistration": "New User Registration",
+        "verificationRequests": "Verification Requests",
+        "systemAlerts": "System Alerts",
+        "dailyReports": "Daily Reports"
+      },
+      "descriptions": {
+        "maintenanceMode": "Enable to show maintenance page to users",
+        "twoFactorAuth": "Require 2FA for admin accounts",
+        "emailVerification": "Require email verification for new users",
+        "ipWhitelist": "Restrict admin access to specific IPs",
+        "newUserRegistration": "Notify admins when new users register",
+        "verificationRequests": "Notify when users submit verification requests",
+        "systemAlerts": "Send alerts for critical system events",
+        "dailyReports": "Send daily summary reports to admins"
+      }
+    },
+    "library": {
+      "title": "Library",
+      "description": "Manage and organize educational resources and files",
+      "stats": {
+        "totalFiles": "Total Files",
+        "totalDownloads": "Total Downloads", 
+        "storageUsed": "Storage Used",
+        "categories": "Categories"
+      },
+      "search": {
+        "placeholder": "Search files..."
+      },
+      "categories": {
+        "allFiles": "All Files",
+        "documents": "Documents",
+        "images": "Images",
+        "videos": "Videos",
+        "other": "Other"
+      },
+      "table": {
+        "headers": {
+          "file": "File",
+          "category": "Category",
+          "size": "Size",
+          "uploadedBy": "Uploaded By",
+          "downloads": "Downloads",
+          "uploaded": "Uploaded",
+          "actions": "Actions"
+        }
+      }
+    },
+    "reports": {
+      "title": "Reports & Moderation",
+      "description": "Review and manage user reports and content moderation",
+      "stats": {
+        "pendingReports": "Pending Reports",
+        "resolvedToday": "Resolved Today",
+        "highPriority": "High Priority",
+        "totalReports": "Total Reports"
+      },
+      "search": {
+        "placeholder": "Search reports..."
+      },
+      "actions": {
+        "highPriority": "High Priority"
+      }
+    },
+    "verification": {
+      "title": "Verification Requests",
+      "description": "Review and approve user verification requests",
+      "stats": {
+        "pendingRequests": "Pending Requests",
+        "approvedToday": "Approved Today",
+        "rejectedToday": "Rejected Today",
+        "totalVerified": "Total Verified"
+      },
+      "search": {
+        "placeholder": "Search requests..."
+      },
+      "actions": {
+        "pendingOnly": "Pending Only"
+      }
+    },
+    "posts": {
+      "title": "Posts Management",
+      "description": "Moderate and manage all platform posts",
+      "stats": {
+        "totalPosts": "Total Posts",
+        "activePosts": "Active Posts",
+        "hiddenPosts": "Hidden Posts",
+        "pinnedPosts": "Pinned Posts"
+      },
+      "search": {
+        "placeholder": "Search posts..."
+      },
+      "actions": {
+        "viewHidden": "View Hidden",
+        "createPost": "Create Post"
+      }
+    }
+  },
+  "common": {
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "view": "View",
+      "search": "Search",
+      "uploadFile": "Upload File",
+      "addUser": "Add User",
+      "createPost": "Create Post",
+      "viewHidden": "View Hidden",
+      "highPriority": "High Priority",
+      "pendingOnly": "Pending Only"
+    },
+    "stats": {
+      "total": "Total",
+      "active": "Active",
+      "pending": "Pending",
+      "resolved": "Resolved",
+      "hidden": "Hidden",
+      "pinned": "Pinned",
+      "verified": "Verified",
+      "rejected": "Rejected",
+      "approved": "Approved"
+    },
+    "time": {
+      "thisWeek": "This week",
+      "fromLastMonth": "{{value}} from last month",
+      "percentageOfTotal": "{{value}}% of total",
+      "filteredResults": "Filtered results"
+    },
+    "table": {
+      "file": "File",
+      "category": "Category", 
+      "size": "Size",
+      "uploadedBy": "Uploaded By",
+      "downloads": "Downloads",
+      "uploaded": "Uploaded",
+      "actions": "Actions"
+    }
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "groups": "Groups",
+    "users": "Users", 
+    "posts": "Posts",
+    "library": "Library",
+    "feed": "Feed",
+    "reports": "Reports",
+    "settings": "Settings",
+    "ai_control": "AI Control",
+    "audit_logs": "Audit Logs",
+    "live_activity": "Live Activity",
+    "verification": "Verification"
+  }
+}

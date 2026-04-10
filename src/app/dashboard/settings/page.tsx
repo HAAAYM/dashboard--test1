@@ -38,53 +38,53 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings className="h-5 w-5" />
-                General Settings
+                {t('settings.generalSettings')}
               </CardTitle>
               <CardDescription>
-                Basic system configuration and platform settings
+                {t('settings.generalSettingsDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Platform Name</label>
+                  <label className="text-sm font-medium">{t('settings.fields.platformName')}</label>
                   <Input defaultValue="Edu Mate" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Admin Email</label>
+                  <label className="text-sm font-medium">{t('settings.fields.adminEmail')}</label>
                   <Input defaultValue="admin@edumate.com" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Timezone</label>
+                  <label className="text-sm font-medium">{t('settings.fields.timezone')}</label>
                   <Select defaultValue="utc">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="utc">UTC</SelectItem>
-                      <SelectItem value="est">EST</SelectItem>
-                      <SelectItem value="pst">PST</SelectItem>
-                      <SelectItem value="gmt">GMT</SelectItem>
+                      <SelectItem value="utc">{t('settings.options.timezones.utc')}</SelectItem>
+                      <SelectItem value="est">{t('settings.options.timezones.est')}</SelectItem>
+                      <SelectItem value="pst">{t('settings.options.timezones.pst')}</SelectItem>
+                      <SelectItem value="gmt">{t('settings.options.timezones.gmt')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Default Language</label>
+                  <label className="text-sm font-medium">{t('settings.fields.defaultLanguage')}</label>
                   <Select defaultValue="en">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                      <SelectItem value="fr">French</SelectItem>
-                      <SelectItem value="de">German</SelectItem>
+                      <SelectItem value="en">{t('settings.options.languages.english')}</SelectItem>
+                      <SelectItem value="es">{t('settings.options.languages.spanish')}</SelectItem>
+                      <SelectItem value="fr">{t('settings.options.languages.french')}</SelectItem>
+                      <SelectItem value="de">{t('settings.options.languages.german')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Platform Description</label>
+                <label className="text-sm font-medium">{t('settings.fields.platformDescription')}</label>
                 <Textarea
                   defaultValue="Professional educational platform for university students and faculty."
                   rows={3}
@@ -92,9 +92,9 @@ export default function SettingsPage() {
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium">Maintenance Mode</div>
+                  <div className="text-sm font-medium">{t('settings.switches.maintenanceMode')}</div>
                   <p className="text-xs text-muted-foreground">
-                    Enable to show maintenance page to users
+                    {t('settings.descriptions.maintenanceMode')}
                   </p>
                 </div>
                 <Switch />
@@ -108,55 +108,55 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                Security Settings
+                {t('settings.securitySettings')}
               </CardTitle>
               <CardDescription>
-                Configure security policies and authentication settings
+                {t('settings.securitySettingsDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Session Timeout (minutes)</label>
+                  <label className="text-sm font-medium">{t('settings.fields.sessionTimeout')}</label>
                   <Input type="number" defaultValue="30" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Max Login Attempts</label>
+                  <label className="text-sm font-medium">{t('settings.fields.maxLoginAttempts')}</label>
                   <Input type="number" defaultValue="5" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Password Min Length</label>
+                  <label className="text-sm font-medium">{t('settings.fields.passwordMinLength')}</label>
                   <Input type="number" defaultValue="8" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Password Expiry (days)</label>
+                  <label className="text-sm font-medium">{t('settings.fields.passwordExpiry')}</label>
                   <Input type="number" defaultValue="90" />
                 </div>
               </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="text-sm font-medium">Two-Factor Authentication</div>
+                    <div className="text-sm font-medium">{t('settings.switches.twoFactorAuth')}</div>
                     <p className="text-xs text-muted-foreground">
-                      Require 2FA for admin accounts
+                      {t('settings.descriptions.twoFactorAuth')}
                     </p>
                   </div>
                   <Switch defaultChecked />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="text-sm font-medium">Email Verification</div>
+                    <div className="text-sm font-medium">{t('settings.switches.emailVerification')}</div>
                     <p className="text-xs text-muted-foreground">
-                      Require email verification for new users
+                      {t('settings.descriptions.emailVerification')}
                     </p>
                   </div>
                   <Switch defaultChecked />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="text-sm font-medium">IP Whitelist</div>
+                    <div className="text-sm font-medium">{t('settings.switches.ipWhitelist')}</div>
                     <p className="text-xs text-muted-foreground">
-                      Restrict admin access to specific IPs
+                      {t('settings.descriptions.ipWhitelist')}
                     </p>
                   </div>
                   <Switch />
@@ -171,63 +171,63 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
-                Notification Settings
+                {t('settings.notificationSettings')}
               </CardTitle>
               <CardDescription>
-                Configure email and in-app notifications
+                {t('settings.notificationSettingsDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="text-sm font-medium">New User Registration</div>
+                    <div className="text-sm font-medium">{t('settings.switches.newUserRegistration')}</div>
                     <p className="text-xs text-muted-foreground">
-                      Notify admins when new users register
+                      {t('settings.descriptions.newUserRegistration')}
                     </p>
                   </div>
                   <Switch defaultChecked />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="text-sm font-medium">Verification Requests</div>
+                    <div className="text-sm font-medium">{t('settings.switches.verificationRequests')}</div>
                     <p className="text-xs text-muted-foreground">
-                      Notify when users submit verification requests
+                      {t('settings.descriptions.verificationRequests')}
                     </p>
                   </div>
                   <Switch defaultChecked />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="text-sm font-medium">Content Reports</div>
+                    <div className="text-sm font-medium">{t('settings.switches.contentReports')}</div>
                     <p className="text-xs text-muted-foreground">
-                      Notify when content is reported
+                      {t('settings.descriptions.contentReports')}
                     </p>
                   </div>
                   <Switch defaultChecked />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="text-sm font-medium">System Alerts</div>
+                    <div className="text-sm font-medium">{t('settings.switches.systemAlerts')}</div>
                     <p className="text-xs text-muted-foreground">
-                      Critical system notifications
+                      {t('settings.descriptions.systemAlerts')}
                     </p>
                   </div>
                   <Switch defaultChecked />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="text-sm font-medium">Daily Summary</div>
+                    <div className="text-sm font-medium">{t('settings.switches.dailySummary')}</div>
                     <p className="text-xs text-muted-foreground">
-                      Daily activity summary reports
+                      {t('settings.descriptions.dailySummary')}
                     </p>
                   </div>
                   <Switch />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Notification Email</label>
-                <Input defaultValue="notifications@edumate.com" />
+                <label className="text-sm font-medium">{t('settings.fields.notificationEmail')}</label>
+                <Input defaultValue="admin@edumate.com" />
               </div>
             </CardContent>
           </Card>

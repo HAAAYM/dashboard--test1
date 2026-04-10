@@ -14,36 +14,165 @@
     "verification": "Verification"
   },
   "dashboard": {
-    "overview": "Overview",
-    "welcome": "Welcome back",
-    "totalUsers": "Total Users",
-    "totalGroups": "Total Groups",
-    "totalPosts": "Total Posts",
-    "recentActivity": "Recent Activity",
-    "quickActions": "Quick Actions",
-    "systemStatus": "System Status"
+    "overview": "نظرة عامة",
+    "welcome": "مرحباً بعودتك",
+    "totalUsers": "إجمالي المستخدمين",
+    "totalGroups": "إجمالي المجموعات",
+    "totalPosts": "إجمالي المنشورات",
+    "recentActivity": "النشاط الأخير",
+    "quickActions": "إجراءات سريعة",
+    "systemStatus": "حالة النظام",
+    "postsDescription": "الإشراف وإدارة جميع منشورات المنصة",
+    "reportsDescription": "مراجعة وإدارة بلاغات المستخدمين والإشراف على المحتوى",
+    "verificationDescription": "مراجعة والموافقة على طلبات التحقق من المستخدمين",
+    "usersDescription": "إدارة ومراقبة جميع مستخدمي المنصة",
+    "libraryDescription": "إدارة وتنظيم الموارد التعليمية والملفات",
+    "filteredResults": "النتائج المصفاة",
+    "fromLastMonth": "{{value}} من الشهر الماضي",
+    "percentageOfTotal": "{{value}}% من الإجمالي",
+    "thisWeek": "هذا الأسبوع",
+    "activeUsers": "المستخدمون النشطون",
+    "newUsers": "المستخدمون الجدد",
+    "inactiveUsers": "المستخدمون الغير نشطين",
+    "totalFiles": "إجمالي الملفات",
+    "totalDownloads": "إجمالي التحميلات",
+    "storageUsed": "مساحة التخزين المستخدمة",
+    "categories": "الفئات",
+    "documents": "المستندات",
+    "images": "الصور",
+    "videos": "الفيديوهات",
+    "other": "أخرى"
   },
   "settings": {
-    "title": "Settings",
-    "general": "General",
-    "account": "Account",
-    "preferences": "Preferences",
-    "language": "Language",
-    "theme": "Theme",
-    "notifications": "Notifications",
-    "security": "Security",
-    "save": "Save",
-    "cancel": "Cancel"
+    "title": "الإعدادات",
+    "general": "عام",
+    "account": "الحساب",
+    "preferences": "التفضيلات",
+    "language": "اللغة",
+    "theme": "المظهر",
+    "notifications": "الإشعارات",
+    "security": "الأمان",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "generalSettings": "الإعدادات العامة",
+    "generalSettingsDescription": "تكوين إعدادات المنصة الأساسية والتفضيلات",
+    "securitySettings": "إعدادات الأمان",
+    "securitySettingsDescription": "تكوين سياسات الأمان وإعدادات المصادقة",
+    "notificationSettings": "إعدادات الإشعارات",
+    "notificationSettingsDescription": "تكوين الإشعارات البريدية وفي التطبيق",
+    "fields": {
+      "platformName": "اسم المنصة",
+      "adminEmail": "البريد الإلكتروني للمسؤول",
+      "timezone": "المنطقة الزمنية",
+      "defaultLanguage": "اللغة الافتراضية",
+      "platformDescription": "وصف المنصة",
+      "sessionTimeout": "مهلة الجلسة (دقائق)",
+      "maxLoginAttempts": "أقصى عدد محاولات الدخول",
+      "passwordMinLength": "الحد الأدنى لطول كلمة المرور",
+      "passwordExpiry": "انتهاء صلاحية كلمة المرور (أيام)",
+      "customCss": "CSS مخصص",
+      "webhookUrl": "رابط Webhook",
+      "notificationEmail": "البريد الإلكتروني للإشعارات"
+    },
+    "placeholders": {
+      "customCss": "Add custom CSS rules here...",
+      "webhookUrl": "https://your-app.com/webhook"
+    },
+    "switches": {
+      "maintenanceMode": "وضع الصيانة",
+      "twoFactorAuth": "المصادقة الثنائية",
+      "emailVerification": "التحقق من البريد الإلكتروني",
+      "ipWhitelist": "القائمة البيضاء للـ IP",
+      "newUserRegistration": "تسجيل المستخدمين الجدد",
+      "verificationRequests": "طلبات التحقق",
+      "contentReports": "بلاغات المحتوى",
+      "systemAlerts": "تنبيهات النظام",
+      "dailySummary": "ملخص يومي"
+    },
+    "descriptions": {
+      "maintenanceMode": "تفعيل لعرض صفحة الصيانة للمستخدمين",
+      "twoFactorAuth": "تتطلب المصادقة الثنائية لحسابات المسؤولين",
+      "emailVerification": "تتطلب التحقق من البريد الإلكتروني للمستخدمين الجدد",
+      "ipWhitelist": "تقييد وصول المسؤولين إلى عناوين IP محددة",
+      "newUserRegistration": "إشعاري المسؤولين عند تسجيل مستخدمين جدد",
+      "verificationRequests": "إشعاري عند تقديم المستخدمين طلبات التحقق",
+      "contentReports": "إشعاري عند الإبلاغ عن المحتوى",
+      "systemAlerts": "إشعارات النظام الحرجة",
+      "dailySummary": "تقارير ملخص النشاط اليومي"
+    },
+    "options": {
+      "languages": {
+        "english": "English",
+        "spanish": "Spanish",
+        "french": "French",
+        "german": "German"
+      },
+      "timezones": {
+        "utc": "UTC",
+        "est": "EST",
+        "pst": "PST",
+        "gmt": "GMT"
+      }
+    }
+  },
+  "library": {
+    "stats": {
+      "totalFiles": "إجمالي الملفات",
+      "totalDownloads": "إجمالي التحميلات",
+      "storageUsed": "مساحة التخزين المستخدمة",
+      "categories": "الفئات",
+      "documents": "المستندات",
+      "images": "الصور",
+      "videos": "الفيديوهات",
+      "other": "أخرى"
+    },
+    "descriptions": {
+      "totalFiles": "ملفات PDF, DOC, TXT",
+      "images": "ملفات JPG, PNG, GIF",
+      "videos": "ملفات MP4, AVI, MOV",
+      "other": "أنواع ملفات أخرى",
+      "activeCategories": "فئات نشطة",
+      "storagePercentage": "67% من 3.1 جيجابايت"
+    },
+    "search": {
+      "placeholder": "البحث في الملفات..."
+    },
+    "table": {
+      "headers": {
+        "file": "الملف",
+        "category": "الفئة",
+        "size": "الحجم",
+        "uploadedBy": "تم الرفع بواسطة",
+        "downloads": "التحميلات",
+        "uploaded": "تم الرفع",
+        "actions": "الإجراءات"
+      }
+    }
   },
   "common": {
-    "loading": "Loading...",
-    "error": "Error",
-    "success": "Success",
-    "submit": "Submit",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
-    "view": "View",
-    "search": "Search"
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "submit": "إرسال",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "view": "عرض",
+    "search": "بحث",
+    "addUser": "إضافة مستخدم",
+    "uploadFile": "رفع ملف",
+    "createPost": "إنشاء منشور",
+    "viewHidden": "عرض المخفي",
+    "highPriority": "أولوية عالية",
+    "pendingOnly": "المعلقة فقط",
+    "allFiles": "جميع الملفات",
+    "searchFiles": "البحث في الملفات...",
+    "file": "الملف",
+    "category": "الفئة",
+    "size": "الحجم",
+    "uploadedBy": "تم الرفع بواسطة",
+    "downloads": "التحميلات",
+    "uploaded": "تم الرفع",
+    "actions": "الإجراءات"
   }
 }

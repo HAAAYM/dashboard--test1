@@ -6,21 +6,24 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Check, X, Eye, FileText, Shield, UserCheck, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function VerificationPage() {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Verification Requests</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('pages.verification.title')}</h1>
           <p className="text-muted-foreground">
-            Review and approve user verification requests
+            {t('pages.verification.description')}
           </p>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline">
             <Clock className="h-4 w-4 mr-2" />
-            Pending Only
+            {t('pages.verification.actions.pendingOnly')}
           </Button>
         </div>
       </div>
@@ -29,29 +32,29 @@ export default function VerificationPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('pages.verification.stats.pendingRequests')}</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">23</div>
-            <p className="text-xs text-muted-foreground">Awaiting review</p>
+            <p className="text-xs text-muted-foreground">{t('common.stats.pending')}</p>
           </CardContent>
         </Card>
         
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved Today</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('pages.verification.stats.approvedToday')}</CardTitle>
             <Check className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">8</div>
-            <p className="text-xs text-muted-foreground">+25% from yesterday</p>
+            <p className="text-xs text-muted-foreground">{t('common.time.fromLastMonth', { value: '+25%' })}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rejected Today</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('pages.verification.stats.rejectedToday')}</CardTitle>
             <X className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -62,7 +65,7 @@ export default function VerificationPage() {
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Verified</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('pages.verification.stats.totalVerified')}</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -86,7 +89,7 @@ export default function VerificationPage() {
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search requests..."
+                  placeholder={t('pages.verification.search.placeholder')}
                   className="pl-8 w-[250px]"
                 />
               </div>

@@ -12,6 +12,7 @@ import { UserDetails } from '@/features/users/users-types';
 import { User } from '@/types';
 import { UserRole } from '@/lib/permissions/roles';
 import { UsersProvider, useUsers } from '@/features/users/users-provider';
+import { useTranslation } from 'react-i18next';
 
 // Mock current user - in real app this would come from auth context
 const mockCurrentUser: User = {
@@ -26,6 +27,7 @@ const mockCurrentUser: User = {
 };
 
 function UsersPageContent() {
+  const { t } = useTranslation();
   const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const { filteredUsers, filters } = useUsers();
@@ -56,14 +58,14 @@ function UsersPageContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Users Management</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('sidebar.users')}</h1>
           <p className="text-muted-foreground">
-            Manage and monitor all platform users
+            {t('dashboard.usersDescription')}
           </p>
         </div>
         <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
           <Plus className="h-4 w-4 mr-2" />
-          Add User
+          {t('common.addUser')}
         </Button>
       </div>
 
@@ -71,7 +73,7 @@ function UsersPageContent() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.totalUsers')}</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -82,8 +84,8 @@ function UsersPageContent() {
                filters.status !== 'all_statuses' || 
                filters.verified !== 'all_verification' || 
                filters.major !== 'all_majors'
-                ? 'Filtered results'
-                : '+12% from last month'
+                ? t('dashboard.filteredResults')
+                : t('dashboard.fromLastMonth', { value: '+12%' })
               }
             </p>
           </CardContent>
@@ -91,37 +93,37 @@ function UsersPageContent() {
         
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.activeUsers')}</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.active}</div>
             <p className="text-xs text-muted-foreground">
-              {Math.round((stats.active / stats.total) * 100)}% of total
+              {t('dashboard.percentageOfTotal', { value: Math.round((stats.active / stats.total) * 100) })}
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">New Users</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.newUsers')}</CardTitle>
             <Plus className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.newThisWeek}</div>
-            <p className="text-xs text-muted-foreground">This week</p>
+            <p className="text-xs text-muted-foreground">{t('dashboard.thisWeek')}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inactive Users</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.inactiveUsers')}</CardTitle>
             <UserX className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.inactive}</div>
             <p className="text-xs text-muted-foreground">
-              {Math.round((stats.inactive / stats.total) * 100)}% of total
+              {t('dashboard.percentageOfTotal', { value: Math.round((stats.inactive / stats.total) * 100) })}
             </p>
           </CardContent>
         </Card>

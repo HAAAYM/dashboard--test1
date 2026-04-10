@@ -6,15 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Check, X, Eye, Flag, AlertTriangle, MessageSquare, User, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function ReportsPage() {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Reports & Moderation</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('sidebar.reports')}</h1>
           <p className="text-muted-foreground">
-            Review and manage user reports and content moderation
+            {t('dashboard.reportsDescription')}
           </p>
         </div>
         <div className="flex items-center space-x-2">

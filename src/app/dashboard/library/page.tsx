@@ -6,20 +6,23 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Download, Upload, Trash2, MoreHorizontal, FileText, File, Image, Video } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function LibraryPage() {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Library & Files</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('sidebar.library')}</h1>
           <p className="text-muted-foreground">
-            Manage and organize educational resources and files
+            {t('dashboard.libraryDescription')}
           </p>
         </div>
         <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
           <Upload className="h-4 w-4 mr-2" />
-          Upload File
+          {t('common.uploadFile')}
         </Button>
       </div>
 
@@ -27,45 +30,45 @@ export default function LibraryPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Files</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('library.stats.totalFiles')}</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">156</div>
-            <p className="text-xs text-muted-foreground">+18% from last month</p>
+            <p className="text-xs text-muted-foreground">{t('common.time.fromLastMonth', { value: '+18%' })}</p>
           </CardContent>
         </Card>
         
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Downloads</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('library.stats.totalDownloads')}</CardTitle>
             <Download className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">2,847</div>
-            <p className="text-xs text-muted-foreground">+32% from last week</p>
+            <p className="text-xs text-muted-foreground">{t('common.time.fromLastMonth', { value: '+32%' })}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Storage Used</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('library.stats.storageUsed')}</CardTitle>
             <File className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">2.1 GB</div>
-            <p className="text-xs text-muted-foreground">67% of 3.1 GB</p>
+            <p className="text-xs text-muted-foreground">{t('library.descriptions.storagePercentage')}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Categories</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('library.stats.categories')}</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">Active categories</p>
+            <p className="text-xs text-muted-foreground">{t('library.descriptions.activeCategories')}</p>
           </CardContent>
         </Card>
       </div>
@@ -74,45 +77,45 @@ export default function LibraryPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Documents</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('library.stats.documents')}</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">89</div>
-            <p className="text-xs text-muted-foreground">PDF, DOC, TXT files</p>
+            <p className="text-xs text-muted-foreground">{t('library.descriptions.totalFiles')}</p>
           </CardContent>
         </Card>
         
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Images</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('library.stats.images')}</CardTitle>
             <Image className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">45</div>
-            <p className="text-xs text-muted-foreground">PNG, JPG, SVG files</p>
+            <p className="text-xs text-muted-foreground">{t('library.descriptions.images')}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Videos</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('library.stats.videos')}</CardTitle>
             <Video className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">MP4, AVI files</p>
+            <div className="text-2xl font-bold">18</div>
+            <p className="text-xs text-muted-foreground">{t('library.descriptions.videos')}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Other</CardTitle>
-            <File className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">{t('library.stats.other')}</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">10</div>
-            <p className="text-xs text-muted-foreground">Archives, spreadsheets</p>
+            <div className="text-2xl font-bold">4</div>
+            <p className="text-xs text-muted-foreground">{t('library.descriptions.other')}</p>
           </CardContent>
         </Card>
       </div>
@@ -122,16 +125,16 @@ export default function LibraryPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>All Files</CardTitle>
+              <CardTitle>{t('common.allFiles')}</CardTitle>
               <CardDescription>
-                Manage and organize library files
+                {t('library.search.placeholder')}
               </CardDescription>
             </div>
             <div className="flex items-center space-x-2">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search files..."
+                  placeholder={t('library.search.placeholder')}
                   className="pl-8 w-[250px]"
                 />
               </div>
@@ -142,13 +145,13 @@ export default function LibraryPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>File</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Uploaded By</TableHead>
-                <TableHead>Downloads</TableHead>
-                <TableHead>Uploaded</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('library.table.headers.file')}</TableHead>
+                <TableHead>{t('library.table.headers.category')}</TableHead>
+                <TableHead>{t('library.table.headers.size')}</TableHead>
+                <TableHead>{t('library.table.headers.uploadedBy')}</TableHead>
+                <TableHead>{t('library.table.headers.downloads')}</TableHead>
+                <TableHead>{t('library.table.headers.uploaded')}</TableHead>
+                <TableHead className="text-right">{t('library.table.headers.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

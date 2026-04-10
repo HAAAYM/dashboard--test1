@@ -6,25 +6,28 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Eye, EyeOff, Trash2, MoreHorizontal, MessageSquare, Heart, Pin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function PostsPage() {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Feed Posts Management</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('sidebar.posts')}</h1>
           <p className="text-muted-foreground">
-            Moderate and manage all platform posts
+            {t('dashboard.postsDescription')}
           </p>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline">
             <Eye className="h-4 w-4 mr-2" />
-            View Hidden
+            {t('common.viewHidden')}
           </Button>
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
             <MessageSquare className="h-4 w-4 mr-2" />
-            Create Post
+            {t('common.createPost')}
           </Button>
         </div>
       </div>
@@ -33,12 +36,12 @@ export default function PostsPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.totalPosts')}</CardTitle>
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">1,234</div>
-            <p className="text-xs text-muted-foreground">+23% from last month</p>
+            <p className="text-xs text-muted-foreground">{t('dashboard.fromLastMonth', { value: '+23%' })}</p>
           </CardContent>
         </Card>
         
