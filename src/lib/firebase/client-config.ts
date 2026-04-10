@@ -1,5 +1,8 @@
 // Firebase Client Configuration
-// This file will be populated with actual Firebase config when ready
+import { getApps, getApp, initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
@@ -11,20 +14,24 @@ export const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || '',
 };
 
-// Initialize Firebase when ready
-export const initializeFirebase = () => {
-  // TODO: Initialize Firebase with actual config
-  // import { initializeApp } from 'firebase/app';
-  // import { getAuth } from 'firebase/auth';
-  // import { getFirestore } from 'firebase/firestore';
-  // import { getStorage } from 'firebase/storage';
-  
-  // const app = initializeApp(firebaseConfig);
-  // const auth = getAuth(app);
-  // const db = getFirestore(app);
-  // const storage = getStorage(app);
-  
-  // return { app, auth, db, storage };
-  
-  return null;
+let firebaseInstances: {
+  app: ReturnType<typeof getApp>;
+  auth: ReturnType<typeof getAuth>;
+  db: ReturnType<typeof getFirestore>;
+  storage: ReturnType<typeof getStorage>;
+} | null = null;
+
+export const getFirebase = () => {
+  if (!firebaseInstances) {
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    firebaseInstances = { app, auth, db, storage };
+  }
+
+  return firebaseInstances;
 };
+
+export const { auth, db, storage } = getFirebase();
