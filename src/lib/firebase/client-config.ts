@@ -1,5 +1,8 @@
 // Firebase Client Configuration
-// This file will be populated with actual Firebase config when ready
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
@@ -13,18 +16,22 @@ export const firebaseConfig = {
 
 // Initialize Firebase when ready
 export const initializeFirebase = () => {
-  // TODO: Initialize Firebase with actual config
-  // import { initializeApp } from 'firebase/app';
-  // import { getAuth } from 'firebase/auth';
-  // import { getFirestore } from 'firebase/firestore';
-  // import { getStorage } from 'firebase/storage';
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
   
-  // const app = initializeApp(firebaseConfig);
-  // const auth = getAuth(app);
-  // const db = getFirestore(app);
-  // const storage = getStorage(app);
-  
-  // return { app, auth, db, storage };
-  
-  return null;
+  return { app, auth, db, storage };
 };
+
+// Initialize Firebase and export instances
+let firebaseInstances: ReturnType<typeof initializeFirebase> | null = null;
+
+export const getFirebase = () => {
+  if (!firebaseInstances) {
+    firebaseInstances = initializeFirebase();
+  }
+  return firebaseInstances;
+};
+
+export const { auth } = getFirebase();

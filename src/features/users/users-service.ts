@@ -1,5 +1,8 @@
 import { UserRole } from '@/lib/permissions/roles';
-import { UserDetails } from './users-types';
+import { User } from '@/types';
+import { getFirebase } from '@/lib/firebase/client-config';
+import { doc, getDoc } from 'firebase/firestore';
+import { mockUsers } from './users-mock';
 
 // Mock audit log storage
 let auditLogs: Array<{
@@ -16,7 +19,7 @@ let auditLogs: Array<{
 // Audit logging function
 export function logAuditEvent(
   action: string,
-  targetUser: UserDetails,
+  targetUser: any,
   performedBy: string,
   oldValue?: any,
   newValue?: any
@@ -44,6 +47,52 @@ export function getAuditLogs() {
 
 // Service functions for user management
 export const usersService = {
+  /**
+   * Get user by ID
+   */
+  async getUserById(userId: string): Promise<{ success: boolean; data?: User; error?: string }> {
+    try {
+      const { db } = getFirebase();
+      if (!db) {
+        console.warn('Firestore not available, falling back to mock data');
+        // Fallback to mock if needed - check if mock users exist
+        const mockUser = mockUsers.find(u => u.id === userId);
+        if (mockUser) {
+          return { success: true, data: mockUser };
+        }
+        return { success: false, error: 'User not found' };
+      }
+
+      const userDocRef = doc(db, 'users', userId);
+      const userDocSnap = await getDoc(userDocRef);
+      
+      if (!userDocSnap.exists()) {
+        return { success: false, error: 'User not found' };
+      }
+
+      const data = userDocSnap.data();
+      const user: User = {
+        id: userDocSnap.id,
+        email: data.email || '',
+        displayName: data.displayName || data.fullName || data.username || data.email || '',
+        role: data.role || UserRole.VIEWER,
+        avatar: data.avatar || data.photoUrl || '',
+        createdAt: data.createdAt?.toDate() || new Date(),
+        lastLoginAt: data.lastLoginAt?.toDate(),
+        status: data.status || 'active',
+        metadata: data.metadata || {},
+      };
+
+      return { success: true, data: user };
+    } catch (error) {
+      console.error('Firestore getUserById error:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to fetch user' 
+      };
+    }
+  },
+
   /**
    * Ban a user
    */
@@ -132,7 +181,7 @@ export const usersService = {
    */
   async updateUser(
     userId: string, 
-    updates: Partial<UserDetails>, 
+    updates: Partial<User>, 
     performedBy: string
   ): Promise<{ success: boolean; error?: string }> {
     try {

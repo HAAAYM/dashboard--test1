@@ -2,6 +2,13 @@ import { Group, GroupFilters, GroupMember, GroupRole, GroupMemberStatus, Message
 import { User } from '@/types';
 import { UserRole } from '@/lib/permissions/roles';
 import { mockGroups } from './groups-mock';
+import { collection, getDocs, query, where, orderBy, limit, doc, getDoc } from 'firebase/firestore';
+import { getFirebase } from '@/lib/firebase/client-config';
+import { usersService } from '../users/users-service';
+
+// Data source abstraction
+type DataSource = 'mock' | 'firebase';
+const DATA_SOURCE: DataSource = Math.random() > -1 ? 'firebase' : 'mock';
 
 // Mock audit log storage
 let auditLogs: Array<{
@@ -563,6 +570,111 @@ export const groupsService = {
    * Get all groups
    */
   async getGroups(filters?: GroupFilters): Promise<{ success: boolean; data?: Group[]; error?: string }> {
+    if (DATA_SOURCE === 'mock') {
+      return this.getGroupsMock(filters);
+    }
+
+    // Firestore implementation
+    try {
+      const { db } = getFirebase();
+      if (!db) {
+        return { success: false, error: 'Firestore db is null' };
+      }
+
+      let q = query(collection(db, 'groups'));
+      
+      // Apply filters if provided
+      if (filters) {
+        if (filters.type !== 'all_types') {
+          q = query(q, where('type', '==', filters.type));
+        }
+        if (filters.status !== 'all_statuses') {
+          q = query(q, where('status', '==', filters.status));
+        }
+      }
+      
+      // Order by creation date and limit results
+      q = query(q, orderBy('createdAt', 'desc'), limit(50));
+
+      const querySnapshot = await getDocs(q);
+      const groups: Group[] = [];
+      
+      const groupsData = await Promise.all(querySnapshot.docs.map(async (docSnapshot) => {
+        const data = docSnapshot.data();
+        
+        // Safe owner enrichment
+        let ownerDisplayName = data.ownerId || '';
+        if (data.ownerId) {
+          try {
+            const userDocRef = doc(db, 'users', data.ownerId);
+            const userDocSnap = await getDoc(userDocRef);
+            if (userDocSnap.exists()) {
+              const userData = userDocSnap.data() as any;
+              ownerDisplayName = userData.displayName || userData.email || data.ownerId;
+            }
+          } catch (error) {
+            // Silent fallback to ownerId if user read fails
+            console.warn('Failed to read owner user data:', error);
+          }
+        }
+        
+        const group: Group = {
+          id: docSnapshot.id,
+          name: data.groupName || data.name || '',
+          description: data.description || '',
+          avatar: data.groupImageUrl || data.imageUrl || data.avatar,
+          type: data.type || 'public',
+          status: data.status || 'active',
+          ownerId: data.ownerId || '',
+          ownerDisplayName,
+          createdBy: data.createdBy || '',
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          membersCount: data.membersCount || data.membersCounts || 0,
+          moderatorsCount: data.moderatorsCount || data.adminsCount || 0,
+          messagesCount: data.messagesCount || 0,
+          mediaCount: data.mediaCount || 0,
+          flaggedContentCount: data.flaggedContentCount,
+          settings: {
+            visitorPreviewEnabled: data.settings?.visitorPreviewEnabled ?? true,
+            visitorCanSeeMedia: data.settings?.visitorCanSeeMedia ?? false,
+            requireJoinApproval: data.settings?.requireJoinApproval ?? false,
+            allowMedia: data.settings?.allowMedia ?? true,
+            maxMediaSizeMB: data.settings?.maxMediaSizeMB ?? 10,
+          },
+          lastActivity: data.lastActivity?.toDate(),
+        };
+        return group;
+      }));
+      
+      groups.push(...groupsData);
+
+      // Apply client-side search filter
+      if (filters?.search) {
+        const searchTerm = filters.search.toLowerCase();
+        return { 
+          success: true, 
+          data: groups.filter(group => 
+            group.name.toLowerCase().includes(searchTerm) ||
+            group.description.toLowerCase().includes(searchTerm)
+          )
+        };
+      }
+
+      return { success: true, data: groups };
+    } catch (error) {
+      console.error('Firestore getGroups error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Firestore getGroups failed'
+      };
+    }
+  },
+
+  /**
+   * Get all groups (Mock implementation)
+   */
+  async getGroupsMock(filters?: GroupFilters): Promise<{ success: boolean; data?: Group[]; error?: string }> {
     try {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -582,6 +694,84 @@ export const groupsService = {
    * Get group by ID
    */
   async getGroupById(groupId: string): Promise<{ success: boolean; data?: Group; error?: string }> {
+    if (DATA_SOURCE === 'mock') {
+      return this.getGroupByIdMock(groupId);
+    }
+
+    // Firestore implementation
+    try {
+      const { db } = getFirebase();
+      if (!db) {
+        // Fallback to mock if Firebase not available
+        console.warn('Firestore not available, falling back to mock data');
+        return this.getGroupByIdMock(groupId);
+      }
+
+      const docRef = doc(db, 'groups', groupId);
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap.exists()) {
+        return { success: false, error: 'Group not found' };
+      }
+
+      const data = docSnap.data();
+      
+      // Safe owner enrichment
+      let ownerDisplayName = data.ownerId || '';
+      if (data.ownerId) {
+        try {
+          const userDocRef = doc(db, 'users', data.ownerId);
+          const userDocSnap = await getDoc(userDocRef);
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data() as any;
+            ownerDisplayName = userData.displayName || userData.email || data.ownerId;
+          }
+        } catch (error) {
+          // Silent fallback to ownerId if user read fails
+          console.warn('Failed to read owner user data:', error);
+        }
+      }
+      
+      const group: Group = {
+        id: docSnap.id,
+        name: data.groupName || data.name || '',
+        description: data.description || '',
+        avatar: data.groupImageUrl || data.imageUrl || data.avatar,
+        type: data.type || 'public',
+        status: data.status || 'active',
+        ownerId: data.ownerId || '',
+        ownerDisplayName,
+        createdBy: data.createdBy || '',
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        membersCount: data.membersCount || data.membersCounts || 0,
+        moderatorsCount: data.moderatorsCount || data.adminsCount || 0,
+        messagesCount: data.messagesCount || 0,
+        mediaCount: data.mediaCount || 0,
+        flaggedContentCount: data.flaggedContentCount,
+        settings: {
+          visitorPreviewEnabled: data.settings?.visitorPreviewEnabled ?? true,
+          visitorCanSeeMedia: data.settings?.visitorCanSeeMedia ?? false,
+          requireJoinApproval: data.settings?.requireJoinApproval ?? false,
+          allowMedia: data.settings?.allowMedia ?? true,
+          maxMediaSizeMB: data.settings?.maxMediaSizeMB ?? 10,
+        },
+        lastActivity: data.lastActivity?.toDate(),
+      };
+
+      return { success: true, data: group };
+    } catch (error) {
+      console.error('Firestore getGroupById error:', error);
+      // Fallback to mock data on error
+      console.warn('Firestore read failed, falling back to mock data');
+      return this.getGroupByIdMock(groupId);
+    }
+  },
+
+  /**
+   * Get group by ID (Mock implementation)
+   */
+  async getGroupByIdMock(groupId: string): Promise<{ success: boolean; data?: Group; error?: string }> {
     try {
       await new Promise(resolve => setTimeout(resolve, 200));
       
@@ -738,13 +928,59 @@ export const groupsService = {
    */
   async getGroupMembers(groupId: string): Promise<{ success: boolean; data?: GroupMember[]; error?: string }> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Return members from the shared store
-      const members = mockMembersStore[groupId] || [];
-      
+      const { db } = getFirebase();
+      if (!db) {
+        console.warn('Firestore not available, falling back to mock data');
+        // Fallback to mock if needed
+        const members = mockMembersStore[groupId] || [];
+        return { success: true, data: members };
+      }
+
+      // Read members subcollection
+      const membersCollectionRef = collection(db, 'groups', groupId, 'members');
+      const membersQuery = query(membersCollectionRef, orderBy('joinedAt', 'desc'));
+      const membersSnapshot = await getDocs(membersQuery);
+
+      const members = await Promise.all(membersSnapshot.docs.map(async (memberDoc) => {
+        const memberData = memberDoc.data();
+        
+        // Safe user enrichment for each member - support both userId and uid fields
+        let user: User | null = null;
+        const memberUserId = memberData.userId || memberData.uid;
+        if (memberUserId) {
+          try {
+            const userResult = await usersService.getUserById(memberUserId);
+            if (userResult.success && userResult.data) {
+              user = userResult.data;
+            }
+          } catch (error) {
+            console.warn('Failed to enrich member with user data:', error);
+          }
+        }
+
+        const member: GroupMember = {
+          id: memberDoc.id,
+          userId: memberUserId || '',
+          groupId: groupId,
+          role: memberData.role || 'member',
+          status: memberData.status || 'active',
+          joinedAt: memberData.joinedAt?.toDate() || new Date(),
+          user: user || {
+            id: memberUserId || '',
+            email: '',
+            displayName: `User ${memberUserId}`,
+            role: UserRole.VIEWER,
+            createdAt: new Date(),
+            status: 'active',
+          },
+        };
+
+        return member;
+      }));
+
       return { success: true, data: members };
     } catch (error) {
+      console.error('Firestore getGroupMembers error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to fetch group members' 
@@ -1053,10 +1289,25 @@ export const groupsService = {
     groupId: string,
     data: Omit<GroupPost, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<{ success: boolean; data?: GroupPost; error?: string }> {
+    if (DATA_SOURCE === 'firebase') {
+      return this.createPostMock(groupId, data);
+    }
+
+    // future firebase
+    throw new Error('Firebase not implemented');
+  },
+
+  /**
+   * Create a new post (Mock implementation)
+   */
+  async createPostMock(
+    groupId: string,
+    data: Omit<GroupPost, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<{ success: boolean; data?: GroupPost; error?: string }> {
     try {
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Check if user is member of the group
+      // Check if user is member of group
       const actorRole = getActorRoleInGroup(groupId, data.authorId);
       if (!actorRole) {
         return { success: false, error: 'User is not a member of this group' };
@@ -1098,9 +1349,72 @@ export const groupsService = {
    */
   async getGroupPosts(groupId: string): Promise<{ success: boolean; data?: GroupPost[]; error?: string }> {
     try {
+      const { db } = getFirebase();
+      if (!db) {
+        console.warn('Firestore not available, falling back to mock data');
+        // Fallback to mock if needed
+        const posts = mockPostsStore[groupId] || [];
+        return { success: true, data: posts };
+      }
+
+      // Read group messages from groups/{groupId}/messages subcollection
+      const messagesQuery = query(
+        collection(db, 'groups', groupId, 'messages'),
+        orderBy('createdAt', 'desc'),
+        limit(50)
+      );
+      const messagesSnapshot = await getDocs(messagesQuery);
+
+      const posts = await Promise.all(messagesSnapshot.docs.map(async (messageDoc) => {
+        const messageData = messageDoc.data();
+        
+        // Safe author enrichment for group messages
+        let authorName = messageData.senderName || messageData.authorName || '';
+        if (!authorName && messageData.senderId) {
+          try {
+            const userResult = await usersService.getUserById(messageData.senderId);
+            if (userResult.success && userResult.data) {
+              authorName = userResult.data.displayName || userResult.data.email || '';
+            }
+          } catch (error) {
+            console.warn('Failed to enrich message with author name:', error);
+          }
+        }
+
+        const post: GroupPost = {
+          id: messageDoc.id,
+          groupId: groupId,
+          authorId: messageData.senderId || messageData.authorId || '',
+          authorName: authorName || `Sender ${messageData.senderId}`,
+          content: messageData.content || messageData.text || '',
+          type: messageData.type || 'text',
+          visibility: 'group_only', // Group messages are internal, not global
+          libraryLinkUrl: undefined, // Group messages don't have library links
+          createdAt: messageData.createdAt?.toDate() || new Date(),
+          updatedAt: messageData.updatedAt?.toDate() || messageData.createdAt?.toDate() || new Date(),
+        };
+
+        return post;
+      }));
+
+      return { success: true, data: posts };
+    } catch (error) {
+      console.error('Firestore getGroupPosts error:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to fetch group posts' 
+      };
+    }
+  },
+
+  /**
+   * Get group posts (Mock implementation)
+   */
+  async getGroupPostsMock(groupId: string): Promise<{ success: boolean; data?: GroupPost[]; error?: string }> {
+    try {
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Return posts from the shared store
+      // Return posts from shared store
       const posts = mockPostsStore[groupId] || [];
       
       return { success: true, data: posts };
@@ -1731,6 +2045,18 @@ export const groupsService = {
    * Get publish requests for a group
    */
   async getPublishRequests(groupId: string): Promise<{ success: boolean; data?: PublishRequest[]; error?: string }> {
+    if (DATA_SOURCE === 'firebase') {
+      return this.getPublishRequestsMock(groupId);
+    }
+
+    // future firebase
+    throw new Error('Firebase not implemented');
+  },
+
+  /**
+   * Get publish requests for a group (Mock implementation)
+   */
+  async getPublishRequestsMock(groupId: string): Promise<{ success: boolean; data?: PublishRequest[]; error?: string }> {
     try {
       await new Promise(resolve => setTimeout(resolve, 300));
       
@@ -1750,6 +2076,18 @@ export const groupsService = {
    * Submit a publish request for a post
    */
   async submitPublishRequest(postId: string, groupId: string, requestedBy: string): Promise<{ success: boolean; data?: PublishRequest; error?: string }> {
+    if (DATA_SOURCE === 'firebase') {
+      return this.submitPublishRequestMock(postId, groupId, requestedBy);
+    }
+
+    // future firebase
+    throw new Error('Firebase not implemented');
+  },
+
+  /**
+   * Submit a publish request for a post (Mock implementation)
+   */
+  async submitPublishRequestMock(postId: string, groupId: string, requestedBy: string): Promise<{ success: boolean; data?: PublishRequest; error?: string }> {
     try {
       await new Promise(resolve => setTimeout(resolve, 400));
       
@@ -1797,6 +2135,18 @@ export const groupsService = {
    * Approve a publish request
    */
   async approvePublishRequest(requestId: string, reviewedBy: string): Promise<{ success: boolean; error?: string }> {
+    if (DATA_SOURCE === 'firebase') {
+      return this.approvePublishRequestMock(requestId, reviewedBy);
+    }
+
+    // future firebase
+    throw new Error('Firebase not implemented');
+  },
+
+  /**
+   * Approve a publish request (Mock implementation)
+   */
+  async approvePublishRequestMock(requestId: string, reviewedBy: string): Promise<{ success: boolean; error?: string }> {
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
       
@@ -1839,6 +2189,18 @@ export const groupsService = {
    * Reject a publish request
    */
   async rejectPublishRequest(requestId: string, reviewedBy: string): Promise<{ success: boolean; error?: string }> {
+    if (DATA_SOURCE === 'firebase') {
+      return this.rejectPublishRequestMock(requestId, reviewedBy);
+    }
+
+    // future firebase
+    throw new Error('Firebase not implemented');
+  },
+
+  /**
+   * Reject a publish request (Mock implementation)
+   */
+  async rejectPublishRequestMock(requestId: string, reviewedBy: string): Promise<{ success: boolean; error?: string }> {
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
       

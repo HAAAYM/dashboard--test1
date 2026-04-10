@@ -58,55 +58,66 @@ export function GroupOverview({ group }: GroupOverviewProps) {
 
   return (
     <div className="space-y-6">
-      {/* Basic Info */}
+      {/* Admin Summary Header */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
+          <div className="flex items-start gap-4">
+            <Avatar className="h-20 w-20">
               <AvatarImage src={group.avatar} alt={group.name} />
-              <AvatarFallback className="text-lg">
+              <AvatarFallback className="text-xl font-bold">
                 {group.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold">{group.name}</h2>
+            <div className="flex-1 space-y-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-3xl font-bold">{group.name}</h1>
                 <Badge 
                   variant="default" 
-                  className={getTypeBadgeColor(group.type)}
+                  className={`${getTypeBadgeColor(group.type)} text-white`}
                 >
                   {group.type.toUpperCase()}
                 </Badge>
                 <Badge 
                   variant="default" 
-                  className={getStatusBadgeColor(group.status)}
+                  className={`${getStatusBadgeColor(group.status)} text-white`}
                 >
                   {group.status.charAt(0).toUpperCase() + group.status.slice(1)}
                 </Badge>
               </div>
-              <CardDescription className="text-base mt-2">
-                {group.description}
-              </CardDescription>
+              {group.description && (
+                <p className="text-muted-foreground text-base leading-relaxed max-w-3xl">
+                  {group.description}
+                </p>
+              )}
+              <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                <span>Created: {formatDate(group.createdAt)}</span>
+                {group.updatedAt && group.updatedAt.getTime() !== group.createdAt.getTime() && (
+                  <span>Updated: {formatDate(group.updatedAt)}</span>
+                )}
+                {group.lastActivity && (
+                  <span>Last Activity: {formatDate(group.lastActivity)}</span>
+                )}
+              </div>
             </div>
-          </CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <div className="text-2xl font-bold text-primary">{group.membersCount}</div>
-              <div className="text-sm text-muted-foreground">Members</div>
+            <div className="text-center p-6 bg-muted/20 rounded-lg border border-border/50">
+              <div className="text-3xl font-bold text-primary">{group.membersCount || 0}</div>
+              <div className="text-sm font-medium text-muted-foreground mt-1">Members</div>
             </div>
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <div className="text-2xl font-bold text-primary">{group.messagesCount}</div>
-              <div className="text-sm text-muted-foreground">Messages</div>
+            <div className="text-center p-6 bg-muted/20 rounded-lg border border-border/50">
+              <div className="text-3xl font-bold text-primary">{group.messagesCount || 0}</div>
+              <div className="text-sm font-medium text-muted-foreground mt-1">Messages</div>
             </div>
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <div className="text-2xl font-bold text-primary">{group.mediaCount}</div>
-              <div className="text-sm text-muted-foreground">Media Files</div>
+            <div className="text-center p-6 bg-muted/20 rounded-lg border border-border/50">
+              <div className="text-3xl font-bold text-primary">{group.mediaCount || 0}</div>
+              <div className="text-sm font-medium text-muted-foreground mt-1">Media Files</div>
             </div>
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <div className={`text-2xl font-bold ${activity.color}`}>{activity.level}</div>
-              <div className="text-sm text-muted-foreground">Activity Level</div>
+            <div className="text-center p-6 bg-muted/20 rounded-lg border border-border/50">
+              <div className={`text-3xl font-bold ${activity.color}`}>{activity.level}</div>
+              <div className="text-sm font-medium text-muted-foreground mt-1">Activity Level</div>
             </div>
           </div>
         </CardContent>

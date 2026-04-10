@@ -95,6 +95,7 @@ export interface Group {
   type: GroupType;
   status: GroupStatus;
   ownerId: string;
+  ownerDisplayName?: string;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;

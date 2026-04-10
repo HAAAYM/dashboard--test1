@@ -192,7 +192,7 @@ export function GroupsTable({ currentUser, onGroupUpdated, onViewDetails }: Grou
               </TableCell>
               <TableCell>
                 <div className="text-sm">
-                  Owner ID: {group.ownerId}
+                  Owner: {group.ownerDisplayName || group.ownerId}
                 </div>
               </TableCell>
               <TableCell>

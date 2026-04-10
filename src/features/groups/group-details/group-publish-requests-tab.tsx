@@ -415,8 +415,7 @@ export function GroupPublishRequestsTab({ group, currentUser }: GroupPublishRequ
                         </DropdownMenuItem>
                       ) : (
                         <>
-                          <DropdownMenuItem 
-                            onClick={() => handleApproveRequest(request)}
+                          <DropdownMenuItem                           onClick={() => handleApproveRequest(request)}
                             className="text-green-600"
                           >
                             <Check className="h-4 w-4 mr-2" />

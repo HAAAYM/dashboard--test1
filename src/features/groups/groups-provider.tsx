@@ -1,8 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import { Group, GroupFilters } from './groups-types';
-import { mockGroups } from './groups-mock';
+import { groupsService } from './groups-service';
 
 interface GroupsContextType {
   groups: Group[];
@@ -20,7 +20,7 @@ interface GroupsContextType {
 const GroupsContext = createContext<GroupsContextType | undefined>(undefined);
 
 export function GroupsProvider({ children }: { children: React.ReactNode }) {
-  const [groups, setGroupsState] = useState<Group[]>(mockGroups);
+  const [groups, setGroupsState] = useState<Group[]>([]);
   const [filters, setFilters] = useState<GroupFilters>({
     search: '',
     type: 'all_types',
@@ -30,6 +30,29 @@ export function GroupsProvider({ children }: { children: React.ReactNode }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Load groups on mount
+  useEffect(() => {
+    const loadGroups = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const result = await groupsService.getGroups();
+        if (result.success && result.data) {
+          setGroupsState(result.data);
+        } else {
+          setError(result.error || 'Failed to load groups');
+        }
+      } catch (err) {
+        setError('Unexpected error loading groups');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadGroups();
+  }, []);
 
   // Filter groups based on current filters
   const filteredGroups = useMemo(() => {
