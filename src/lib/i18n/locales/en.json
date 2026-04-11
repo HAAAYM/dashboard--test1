@@ -11,7 +11,9 @@
     "ai_control": "AI Control",
     "audit_logs": "Audit Logs",
     "live_activity": "Live Activity",
-    "verification": "Verification"
+    "verification": "Verification",
+    "admin": "Admin",
+    "profile": "Profile"
   },
   "dashboard": {
     "overview": "Overview",

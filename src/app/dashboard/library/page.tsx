@@ -125,16 +125,16 @@ export default function LibraryPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>{t('common.allFiles')}</CardTitle>
+              <CardTitle>All Files</CardTitle>
               <CardDescription>
-                {t('library.search.placeholder')}
+                Manage and organize library files
               </CardDescription>
             </div>
             <div className="flex items-center space-x-2">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder={t('library.search.placeholder')}
+                  placeholder="Search files..."
                   className="pl-8 w-[250px]"
                 />
               </div>
@@ -145,13 +145,13 @@ export default function LibraryPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('library.table.headers.file')}</TableHead>
-                <TableHead>{t('library.table.headers.category')}</TableHead>
-                <TableHead>{t('library.table.headers.size')}</TableHead>
-                <TableHead>{t('library.table.headers.uploadedBy')}</TableHead>
-                <TableHead>{t('library.table.headers.downloads')}</TableHead>
-                <TableHead>{t('library.table.headers.uploaded')}</TableHead>
-                <TableHead className="text-right">{t('library.table.headers.actions')}</TableHead>
+                <TableHead>File</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Size</TableHead>
+                <TableHead>Uploaded By</TableHead>
+                <TableHead>Downloads</TableHead>
+                <TableHead>Uploaded</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

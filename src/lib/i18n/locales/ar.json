@@ -11,7 +11,10 @@
     "ai_control": "AI Control",
     "audit_logs": "Audit Logs",
     "live_activity": "Live Activity",
-    "verification": "Verification"
+    "verification": "Verification",
+    "notifications": "الإشعارات",
+    "admin": "الإدارة",
+    "profile": "الملف الشخصي"
   },
   "dashboard": {
     "overview": "نظرة عامة",
@@ -45,21 +48,21 @@
   },
   "settings": {
     "title": "الإعدادات",
-    "general": "عام",
+    "general": "إدارة إعدادات النظام العامة والمنصة",
     "account": "الحساب",
     "preferences": "التفضيلات",
     "language": "اللغة",
     "theme": "المظهر",
     "notifications": "الإشعارات",
     "security": "الأمان",
-    "save": "حفظ",
+    "save": "حفظ التغييرات",
     "cancel": "إلغاء",
     "generalSettings": "الإعدادات العامة",
-    "generalSettingsDescription": "تكوين إعدادات المنصة الأساسية والتفضيلات",
+    "generalSettingsDescription": "تكوين الإعدادات الأساسية للمنصة",
     "securitySettings": "إعدادات الأمان",
-    "securitySettingsDescription": "تكوين سياسات الأمان وإعدادات المصادقة",
+    "securitySettingsDescription": "إدارة إعدادات الأمان والوصول",
     "notificationSettings": "إعدادات الإشعارات",
-    "notificationSettingsDescription": "تكوين الإشعارات البريدية وفي التطبيق",
+    "notificationSettingsDescription": "تكوين تفضيلات الإشعارات",
     "fields": {
       "platformName": "اسم المنصة",
       "adminEmail": "البريد الإلكتروني للمسؤول",
@@ -67,52 +70,62 @@
       "defaultLanguage": "اللغة الافتراضية",
       "platformDescription": "وصف المنصة",
       "sessionTimeout": "مهلة الجلسة (دقائق)",
-      "maxLoginAttempts": "أقصى عدد محاولات الدخول",
-      "passwordMinLength": "الحد الأدنى لطول كلمة المرور",
+      "maxLoginAttempts": "محاولات الدخول القصوى",
+      "passwordMinLength": "الحد الأدنى لكلمة المرور",
       "passwordExpiry": "انتهاء صلاحية كلمة المرور (أيام)",
-      "customCss": "CSS مخصص",
-      "webhookUrl": "رابط Webhook",
       "notificationEmail": "البريد الإلكتروني للإشعارات"
     },
-    "placeholders": {
-      "customCss": "Add custom CSS rules here...",
-      "webhookUrl": "https://your-app.com/webhook"
+    "options": {
+      "timezones": {
+        "utc": "UTC (التوقيت العالمي المنسق)",
+        "est": "EST (التوقيت الشرقي)",
+        "pst": "PST (التوقيت الهادئ)",
+        "gmt": "GMT (توقيت غرينتش)",
+        "cst": "CST (التوقيت المركزي)",
+        "mst": "MST (التوقيت الجبلي)",
+        "ist": "IST (التوقيت الهندي القياسي)",
+        "jst": "JST (التوقيت الياباني القياسي)",
+        "aest": "AEST (التوقيت الشرقي الأسترالي)"
+      },
+      "languages": {
+        "arabic": "العربية",
+        "english": "English",
+        "spanish": "Spanish",
+        "french": "French",
+        "german": "German",
+        "chinese": "Chinese",
+        "hindi": "Hindi",
+        "portuguese": "Portuguese",
+        "russian": "Russian"
+      }
     },
     "switches": {
       "maintenanceMode": "وضع الصيانة",
       "twoFactorAuth": "المصادقة الثنائية",
       "emailVerification": "التحقق من البريد الإلكتروني",
-      "ipWhitelist": "القائمة البيضاء للـ IP",
+      "ipWhitelist": "القائمة البيضاء للعناوين IP",
       "newUserRegistration": "تسجيل المستخدمين الجدد",
       "verificationRequests": "طلبات التحقق",
-      "contentReports": "بلاغات المحتوى",
+      "contentReports": "تقارير المحتوى",
       "systemAlerts": "تنبيهات النظام",
-      "dailySummary": "ملخص يومي"
+      "dailySummary": "الملخص اليومي"
     },
     "descriptions": {
-      "maintenanceMode": "تفعيل لعرض صفحة الصيانة للمستخدمين",
-      "twoFactorAuth": "تتطلب المصادقة الثنائية لحسابات المسؤولين",
-      "emailVerification": "تتطلب التحقق من البريد الإلكتروني للمستخدمين الجدد",
-      "ipWhitelist": "تقييد وصول المسؤولين إلى عناوين IP محددة",
-      "newUserRegistration": "إشعاري المسؤولين عند تسجيل مستخدمين جدد",
-      "verificationRequests": "إشعاري عند تقديم المستخدمين طلبات التحقق",
-      "contentReports": "إشعاري عند الإبلاغ عن المحتوى",
-      "systemAlerts": "إشعارات النظام الحرجة",
-      "dailySummary": "تقارير ملخص النشاط اليومي"
+      "maintenanceMode": "تعطيل الوصول المؤقت للمنصة",
+      "twoFactorAuth": "تتطلب رمز تحقق إضافي",
+      "emailVerification": "إرسال رمز تحقق عبر البريد",
+      "ipWhitelist": "السماح بالوصول من عناوين IP محددة فقط",
+      "newUserRegistration": "إشعار عند تسجيل مستخدمين جدد",
+      "verificationRequests": "إشعار عند وجود طلبات تحقق",
+      "contentReports": "إشعار عند الإبلاغ عن محتوى",
+      "systemAlerts": "إشعار عند وجود مشاكل في النظام",
+      "dailySummary": "إرسال ملخص يومي بالأنشطة"
     },
-    "options": {
-      "languages": {
-        "english": "English",
-        "spanish": "Spanish",
-        "french": "French",
-        "german": "German"
-      },
-      "timezones": {
-        "utc": "UTC",
-        "est": "EST",
-        "pst": "PST",
-        "gmt": "GMT"
-      }
+    "timezones": {
+      "utc": "UTC",
+      "est": "EST",
+      "pst": "PST",
+      "gmt": "GMT"
     }
   },
   "library": {

@@ -20,7 +20,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Determine sidebar side based on language direction
-  const side = mounted && i18n.language === 'ar' ? 'right' : 'left';
+  const side = mounted ? (i18n.language === 'ar' ? 'right' : 'left') : 'left';
 
   return (
     <SidebarProvider>
