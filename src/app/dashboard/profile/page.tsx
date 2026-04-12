@@ -21,25 +21,19 @@ import {
   ChevronRight,
   Users
 } from 'lucide-react';
+import { 
+  currentUser, 
+  staffTabs, 
+  connectedDevices, 
+  recentActivity, 
+  importantNotifications, 
+  recentNotifications 
+} from '@/features/profile/profile-mock';
 
 export default function ProfilePage() {
   const [expandedTabs, setExpandedTabs] = useState<string[]>(['overview']);
 
-  // Mock current staff user - university staff only
-  const currentUser = {
-    id: 1,
-    name: 'Dr. Ahmed Mohammed',
-    email: 'ahmed.mohammed@university.edu',
-    position: 'Dean of Engineering',
-    role: 'admin',
-    avatar: '',
-    status: 'active',
-    lastLogin: '2024-01-15 14:30',
-    joinedDate: '2023-06-15',
-    department: 'College of Engineering',
-    employeeId: 'EMP-2023-001'
-  };
-
+  
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
     return name
@@ -57,27 +51,7 @@ export default function ProfilePage() {
     );
   };
 
-  const staffTabs = [
-    {
-      id: 'devices',
-      title: 'Connected Devices',
-      icon: Smartphone,
-      description: 'Manage and monitor connected devices'
-    },
-    {
-      id: 'overview',
-      title: 'Staff Information & Activity',
-      icon: User,
-      description: 'Staff profile, information and recent dashboard activity'
-    },
-    {
-      id: 'settings',
-      title: 'Settings & Notifications',
-      icon: Settings,
-      description: 'Account settings, security and important notifications'
-    }
-  ];
-
+  
   return (
     <div className="space-y-6">
       <div>
@@ -181,27 +155,22 @@ export default function ProfilePage() {
                           Connected Devices
                         </h4>
                         <div className="space-y-3">
-                          <div className="flex items-center justify-between p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
-                            <Globe className="h-5 w-5 text-green-600" />
-                            <div>
-                              <div className="font-semibold">Chrome - Windows (Current)</div>
-                              <div className="text-sm text-muted-foreground">Last used: Now</div>
+                          {connectedDevices.map((device) => (
+                            <div key={device.id} className="flex items-center justify-between p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
+                              {device.type === 'mobile' ? (
+                                <Smartphone className={`h-5 w-5 ${device.isCurrent ? 'text-green-600' : 'text-muted-foreground'}`} />
+                              ) : (
+                                <Globe className={`h-5 w-5 ${device.isCurrent ? 'text-green-600' : 'text-muted-foreground'}`} />
+                              )}
+                              <div>
+                                <div className="font-semibold">
+                                  {device.name}
+                                  {device.isCurrent && ' (Current)'}
+                                </div>
+                                <div className="text-sm text-muted-foreground">Last used: {device.lastUsed}</div>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center justify-between p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
-                            <Smartphone className="h-5 w-5 text-muted-foreground" />
-                            <div>
-                              <div className="font-semibold">Mobile App - iOS</div>
-                              <div className="text-sm text-muted-foreground">Last used: 2 hours ago</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
-                            <Globe className="h-5 w-5 text-muted-foreground" />
-                            <div>
-                              <div className="font-semibold">Firefox - Mac</div>
-                              <div className="text-sm text-muted-foreground">Last used: Yesterday</div>
-                            </div>
-                          </div>
+                          ))}
                         </div>
                       </div>
 
@@ -271,27 +240,26 @@ export default function ProfilePage() {
                           Recent Activity
                         </h4>
                         <div className="space-y-3">
-                          <div className="flex items-center justify-between p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
-                            <div>
-                              <div className="font-semibold">Dashboard Login</div>
-                              <div className="text-sm text-muted-foreground">{currentUser.lastLogin}</div>
-                            </div>
-                            <Activity className="h-5 w-5 text-primary" />
-                          </div>
-                          <div className="flex items-center justify-between p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
-                            <div>
-                              <div className="font-semibold">User Management Access</div>
-                              <div className="text-sm text-muted-foreground">2024-01-15 13:45</div>
-                            </div>
-                            <Users className="h-5 w-5 text-primary" />
-                          </div>
-                          <div className="flex items-center justify-between p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
-                            <div>
-                              <div className="font-semibold">Permission Update</div>
-                              <div className="text-sm text-muted-foreground">2024-01-15 11:20</div>
-                            </div>
-                            <Shield className="h-5 w-5 text-primary" />
-                          </div>
+                          {recentActivity.map((activity) => {
+                            const getIcon = (iconName: string) => {
+                              switch (iconName) {
+                                case 'Activity': return <Activity className="h-5 w-5 text-primary" />;
+                                case 'Users': return <Users className="h-5 w-5 text-primary" />;
+                                case 'Shield': return <Shield className="h-5 w-5 text-primary" />;
+                                default: return <Activity className="h-5 w-5 text-primary" />;
+                              }
+                            };
+                            
+                            return (
+                              <div key={activity.id} className="flex items-center justify-between p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
+                                <div>
+                                  <div className="font-semibold">{activity.action}</div>
+                                  <div className="text-sm text-muted-foreground">{activity.timestamp}</div>
+                                </div>
+                                {getIcon(activity.icon)}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     </>
@@ -331,36 +299,20 @@ export default function ProfilePage() {
                         </p>
                         
                         <div className="space-y-3">
-                          <div className="flex items-center justify-between p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
-                            <div>
-                              <div className="font-semibold">System Security Alerts</div>
-                              <div className="text-sm text-muted-foreground">Critical security issues only</div>
+                          {importantNotifications.map((notification) => (
+                            <div key={notification.id} className="flex items-center justify-between p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
+                              <div>
+                                <div className="font-semibold">{notification.title}</div>
+                                <div className="text-sm text-muted-foreground">{notification.description}</div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className={`h-3 w-3 ${notification.status === 'active' ? 'bg-green-500' : 'bg-gray-400'} rounded-full`}></div>
+                                <span className={`text-sm ${notification.status === 'active' ? 'text-green-600' : 'text-gray-600'} font-medium capitalize`}>
+                                  {notification.status}
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-                              <span className="text-sm text-green-600 font-medium">Active</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
-                            <div>
-                              <div className="font-semibold">Emergency System Updates</div>
-                              <div className="text-sm text-muted-foreground">System maintenance and updates</div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-                              <span className="text-sm text-green-600 font-medium">Active</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
-                            <div>
-                              <div className="font-semibold">User Management Alerts</div>
-                              <div className="text-sm text-muted-foreground">Critical user account issues</div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-                              <span className="text-sm text-green-600 font-medium">Active</span>
-                            </div>
-                          </div>
+                          ))}
                         </div>
                       </div>
 
@@ -370,36 +322,29 @@ export default function ProfilePage() {
                           Recent Notifications
                         </h4>
                         <div className="space-y-3">
-                          <div className="p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
-                            <div className="flex items-start gap-3">
-                              <div className="h-3 w-3 bg-blue-500 rounded-full mt-2"></div>
-                              <div className="flex-1">
-                                <div className="font-semibold">System Update Completed</div>
-                                <div className="text-sm text-muted-foreground">Dashboard system has been updated successfully</div>
-                                <div className="text-xs text-muted-foreground mt-1">2024-01-15 10:30</div>
+                          {recentNotifications.map((notification) => {
+                            const getColorClass = (color: string) => {
+                              switch (color) {
+                                case 'blue': return 'bg-blue-500';
+                                case 'yellow': return 'bg-yellow-500';
+                                case 'green': return 'bg-green-500';
+                                default: return 'bg-gray-500';
+                              }
+                            };
+                            
+                            return (
+                              <div key={notification.id} className="p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
+                                <div className="flex items-start gap-3">
+                                  <div className={`h-3 w-3 ${getColorClass(notification.color)} rounded-full mt-2`}></div>
+                                  <div className="flex-1">
+                                    <div className="font-semibold">{notification.title}</div>
+                                    <div className="text-sm text-muted-foreground">{notification.description}</div>
+                                    <div className="text-xs text-muted-foreground mt-1">{notification.timestamp}</div>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                          <div className="p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
-                            <div className="flex items-start gap-3">
-                              <div className="h-3 w-3 bg-yellow-500 rounded-full mt-2"></div>
-                              <div className="flex-1">
-                                <div className="font-semibold">New User Registration</div>
-                                <div className="text-sm text-muted-foreground">3 new staff accounts pending approval</div>
-                                <div className="text-xs text-muted-foreground mt-1">2024-01-15 09:15</div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="p-4 bg-background rounded-md border border-primary/20 hover:bg-primary/5 transition-colors">
-                            <div className="flex items-start gap-3">
-                              <div className="h-3 w-3 bg-green-500 rounded-full mt-2"></div>
-                              <div className="flex-1">
-                                <div className="font-semibold">Backup Completed</div>
-                                <div className="text-sm text-muted-foreground">Daily backup completed successfully</div>
-                                <div className="text-xs text-muted-foreground mt-1">2024-01-14 23:00</div>
-                              </div>
-                            </div>
-                          </div>
+                            );
+                          })}
                         </div>
                       </div>
 
