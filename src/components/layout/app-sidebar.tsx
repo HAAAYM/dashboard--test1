@@ -119,6 +119,11 @@ const navigation = [
         icon: Bot,
       },
       {
+        titleKey: 'AI Chat',
+        url: '/dashboard/ai-chat',
+        icon: MessageSquare,
+      },
+      {
         titleKey: 'sidebar.settings',
         url: '/dashboard/settings',
         icon: Settings,
