@@ -42,7 +42,14 @@ const mockUsers = [
     position: 'System Administrator',
     status: 'active',
     lastLogin: '2024-01-15',
-    permissions: ['users_read', 'users_write', 'users_delete', 'groups_read', 'groups_write', 'groups_delete', 'groups_delete_posts', 'library_read', 'library_write', 'library_delete', 'library_manage_categories']
+    permissions: [
+      'dashboard_view', 'admin_view', 'admin_users_manage', 'admin_roles_manage',
+      'users_view', 'users_create', 'users_edit', 'users_delete', 'users_ban', 'users_assign_roles',
+      'groups_view', 'groups_create', 'groups_edit', 'groups_delete', 'groups_moderate', 'groups_assign_moderators',
+      'library_view', 'library_create', 'library_edit', 'library_delete', 'library_manage_categories',
+      'reports_view', 'reports_review', 'reports_resolve', 'reports_dismiss', 'reports_delete',
+      'verification_view', 'verification_approve', 'verification_reject', 'verification_assign'
+    ]
   },
   {
     id: 2,
@@ -52,17 +59,23 @@ const mockUsers = [
     position: 'Content Manager',
     status: 'active',
     lastLogin: '2024-01-14',
-    permissions: ['users_read', 'groups_read', 'groups_write', 'groups_delete_posts', 'library_read', 'library_write']
+    permissions: [
+      'dashboard_view', 'users_view',
+      'groups_view', 'groups_edit', 'groups_moderate',
+      'library_view', 'library_edit',
+      'reports_view', 'reports_review', 'reports_resolve', 'reports_dismiss',
+      'verification_view', 'verification_approve', 'verification_reject'
+    ]
   },
   {
     id: 3,
     name: 'Bob Johnson',
     email: 'bob@edumate.com',
-    role: 'user',
+    role: 'viewer',
     position: 'Library Assistant',
     status: 'inactive',
     lastLogin: '2024-01-10',
-    permissions: ['users_read', 'groups_read', 'library_read']
+    permissions: ['dashboard_view']
   },
   {
     id: 4,
@@ -72,14 +85,20 @@ const mockUsers = [
     position: 'Group Coordinator',
     status: 'active',
     lastLogin: '2024-01-15',
-    permissions: ['users_read', 'groups_read', 'groups_write', 'library_read']
+    permissions: [
+      'dashboard_view', 'users_view',
+      'groups_view', 'groups_edit', 'groups_moderate',
+      'library_view', 'library_edit',
+      'reports_view', 'reports_review', 'reports_resolve', 'reports_dismiss',
+      'verification_view', 'verification_approve', 'verification_reject'
+    ]
   }
 ];
 
 const roles = [
   { value: 'admin', label: 'Administrator', color: 'bg-red-600' },
   { value: 'moderator', label: 'Moderator', color: 'bg-blue-600' },
-  { value: 'user', label: 'User', color: 'bg-gray-600' }
+  { value: 'viewer', label: 'Viewer', color: 'bg-gray-600' }
 ];
 
 const permissions = [

@@ -41,67 +41,214 @@ interface Role {
 
 const mockPermissions: Permission[] = [
   {
-    id: 'read_dashboard',
-    name: 'Read Dashboard',
+    id: 'dashboard_view',
+    name: 'View Dashboard',
     description: 'View dashboard and analytics',
     category: 'Dashboard',
     icon: FileText
   },
   {
-    id: 'write_dashboard',
-    name: 'Write Dashboard',
-    description: 'Create and edit dashboard content',
-    category: 'Dashboard',
-    icon: FileText
+    id: 'admin_view',
+    name: 'Admin Panel',
+    description: 'Access admin panel',
+    category: 'Admin',
+    icon: Shield
   },
   {
-    id: 'read_users',
-    name: 'Read Users',
+    id: 'admin_users_manage',
+    name: 'Manage Admin Users',
+    description: 'Manage admin users and roles',
+    category: 'Admin',
+    icon: Shield
+  },
+  {
+    id: 'admin_roles_manage',
+    name: 'Manage Roles',
+    description: 'Configure user roles',
+    category: 'Admin',
+    icon: Shield
+  },
+  {
+    id: 'users_view',
+    name: 'View Users',
     description: 'View user list and profiles',
     category: 'Users',
     icon: Users
   },
   {
-    id: 'write_users',
-    name: 'Write Users',
-    description: 'Create and edit user accounts',
+    id: 'users_create',
+    name: 'Create Users',
+    description: 'Create new user accounts',
     category: 'Users',
     icon: Users
   },
   {
-    id: 'delete_users',
+    id: 'users_edit',
+    name: 'Edit Users',
+    description: 'Edit user accounts',
+    category: 'Users',
+    icon: Users
+  },
+  {
+    id: 'users_delete',
     name: 'Delete Users',
     description: 'Remove user accounts',
     category: 'Users',
     icon: Users
   },
   {
-    id: 'access_groups',
-    name: 'Groups Access',
-    description: 'Access and manage groups',
+    id: 'users_ban',
+    name: 'Ban Users',
+    description: 'Ban or unban users',
+    category: 'Users',
+    icon: Users
+  },
+  {
+    id: 'users_assign_roles',
+    name: 'Assign Roles',
+    description: 'Assign roles to users',
+    category: 'Users',
+    icon: Users
+  },
+  {
+    id: 'groups_view',
+    name: 'View Groups',
+    description: 'View group list and details',
     category: 'Groups',
     icon: Users2
   },
   {
-    id: 'manage_permissions',
-    name: 'Manage Permissions',
-    description: 'Configure user permissions and roles',
-    category: 'System',
-    icon: Shield
+    id: 'groups_create',
+    name: 'Create Groups',
+    description: 'Create new groups',
+    category: 'Groups',
+    icon: Users2
   },
   {
-    id: 'system_settings',
-    name: 'System Settings',
-    description: 'Modify system configuration',
-    category: 'System',
-    icon: Settings
+    id: 'groups_edit',
+    name: 'Edit Groups',
+    description: 'Edit group information',
+    category: 'Groups',
+    icon: Users2
   },
   {
-    id: 'database_access',
-    name: 'Database Access',
-    description: 'Direct database operations',
-    category: 'System',
-    icon: Database
+    id: 'groups_delete',
+    name: 'Delete Groups',
+    description: 'Remove groups',
+    category: 'Groups',
+    icon: Users2
+  },
+  {
+    id: 'groups_moderate',
+    name: 'Moderate Groups',
+    description: 'Moderate group content',
+    category: 'Groups',
+    icon: Users2
+  },
+  {
+    id: 'groups_assign_moderators',
+    name: 'Assign Moderators',
+    description: 'Assign group moderators',
+    category: 'Groups',
+    icon: Users2
+  },
+  {
+    id: 'library_view',
+    name: 'View Library',
+    description: 'View library resources',
+    category: 'Library',
+    icon: FileText
+  },
+  {
+    id: 'library_create',
+    name: 'Create Library Content',
+    description: 'Create library resources',
+    category: 'Library',
+    icon: FileText
+  },
+  {
+    id: 'library_edit',
+    name: 'Edit Library Content',
+    description: 'Edit library resources',
+    category: 'Library',
+    icon: FileText
+  },
+  {
+    id: 'library_delete',
+    name: 'Delete Library Content',
+    description: 'Remove library resources',
+    category: 'Library',
+    icon: FileText
+  },
+  {
+    id: 'library_manage_categories',
+    name: 'Manage Categories',
+    description: 'Manage library categories',
+    category: 'Library',
+    icon: FileText
+  },
+  {
+    id: 'reports_view',
+    name: 'View Reports',
+    description: 'View reports list',
+    category: 'Reports',
+    icon: FileText
+  },
+  {
+    id: 'reports_review',
+    name: 'Review Reports',
+    description: 'Review and process reports',
+    category: 'Reports',
+    icon: FileText
+  },
+  {
+    id: 'reports_resolve',
+    name: 'Resolve Reports',
+    description: 'Mark reports as resolved',
+    category: 'Reports',
+    icon: FileText
+  },
+  {
+    id: 'reports_dismiss',
+    name: 'Dismiss Reports',
+    description: 'Dismiss reports',
+    category: 'Reports',
+    icon: FileText
+  },
+  {
+    id: 'reports_delete',
+    name: 'Delete Reports',
+    description: 'Remove reports',
+    category: 'Reports',
+    icon: FileText
+  },
+  {
+    id: 'verification_view',
+    name: 'View Verification',
+    description: 'View verification requests',
+    category: 'Verification',
+    icon: FileText
+  },
+  {
+    id: 'verification_approve',
+    name: 'Approve Verification',
+    description: 'Approve verification requests',
+    category: 'Verification',
+    icon: FileText
+  },
+  {
+    id: 'verification_reject',
+    name: 'Reject Verification',
+    description: 'Reject verification requests',
+    category: 'Verification',
+    icon: FileText
+  },
+  {
+    id: 'verification_assign',
+    name: 'Assign Verification',
+    description: 'Assign verification requests',
+    category: 'Verification',
+    icon: FileText
   }
 ];
 
@@ -109,29 +256,28 @@ const mockRoles: Role[] = [
   {
     id: 'admin',
     name: 'Administrator',
-    description: 'Full system access',
+    description: 'Full system access and control',
     permissions: mockPermissions.map(p => p.id),
     color: 'bg-red-600'
   },
   {
     id: 'moderator',
     name: 'Moderator',
-    description: 'Content management access',
-    permissions: ['read_dashboard', 'write_dashboard', 'read_users', 'write_users'],
+    description: 'Content moderation and group management',
+    permissions: [
+      'dashboard_view', 'users_view',
+      'groups_view', 'groups_edit', 'groups_moderate',
+      'library_view', 'library_edit',
+      'reports_view', 'reports_review', 'reports_resolve', 'reports_dismiss',
+      'verification_view', 'verification_approve', 'verification_reject'
+    ],
     color: 'bg-blue-600'
-  },
-  {
-    id: 'editor',
-    name: 'Editor',
-    description: 'Content editing access',
-    permissions: ['read_dashboard', 'write_dashboard'],
-    color: 'bg-green-600'
   },
   {
     id: 'viewer',
     name: 'Viewer',
-    description: 'Read-only access',
-    permissions: ['read_dashboard'],
+    description: 'Read-only access to dashboard',
+    permissions: ['dashboard_view'],
     color: 'bg-gray-600'
   }
 ];

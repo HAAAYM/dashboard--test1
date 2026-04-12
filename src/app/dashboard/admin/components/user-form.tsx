@@ -5,9 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { X, ChevronDown, ChevronRight } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface UserFormProps {
   user?: {
@@ -25,42 +24,37 @@ interface UserFormProps {
 }
 
 const roles = [
-  { value: 'admin', label: 'Administrator', description: 'Full system access' },
-  { value: 'moderator', label: 'Moderator', description: 'Content management access' },
-  { value: 'user', label: 'User', description: 'Basic read access' }
-];
-
-const permissionCategories = [
-  {
-    id: 'users',
-    label: 'Users',
-    description: 'Control user management',
+  { 
+    value: 'admin', 
+    label: 'Administrator', 
+    description: 'Full system access and control',
     permissions: [
-      { value: 'users_read', label: 'View Users', description: 'View user list and profiles' },
-      { value: 'users_write', label: 'Add/Edit Users', description: 'Create and edit user accounts' },
-      { value: 'users_delete', label: 'Delete Users', description: 'Remove user accounts' }
+      'dashboard_view', 'admin_view', 'admin_users_manage', 'admin_roles_manage',
+      'users_view', 'users_create', 'users_edit', 'users_delete', 'users_ban', 'users_assign_roles',
+      'groups_view', 'groups_create', 'groups_edit', 'groups_delete', 'groups_moderate', 'groups_assign_moderators',
+      'library_view', 'library_create', 'library_edit', 'library_delete', 'library_manage_categories',
+      'reports_view', 'reports_review', 'reports_resolve', 'reports_dismiss', 'reports_delete',
+      'verification_view', 'verification_approve', 'verification_reject', 'verification_assign'
     ]
   },
-  {
-    id: 'groups',
-    label: 'Groups',
-    description: 'Control group management',
+  { 
+    value: 'moderator', 
+    label: 'Moderator', 
+    description: 'Content moderation and group management',
     permissions: [
-      { value: 'groups_read', label: 'View Groups', description: 'View group list and details' },
-      { value: 'groups_write', label: 'Add/Edit Groups', description: 'Create and edit groups' },
-      { value: 'groups_delete', label: 'Delete Groups', description: 'Remove groups' },
-      { value: 'groups_delete_posts', label: 'Delete Group Posts', description: 'Remove posts from groups' }
+      'dashboard_view', 'users_view',
+      'groups_view', 'groups_edit', 'groups_moderate',
+      'library_view', 'library_edit',
+      'reports_view', 'reports_review', 'reports_resolve', 'reports_dismiss',
+      'verification_view', 'verification_approve', 'verification_reject'
     ]
   },
-  {
-    id: 'library',
-    label: 'Library',
-    description: 'Control library resources',
+  { 
+    value: 'viewer', 
+    label: 'Viewer', 
+    description: 'Read-only access to dashboard',
     permissions: [
-      { value: 'library_read', label: 'View Library', description: 'View library resources' },
-      { value: 'library_write', label: 'Add/Edit Resources', description: 'Create and edit library resources' },
-      { value: 'library_delete', label: 'Delete Resources', description: 'Remove library resources' },
-      { value: 'library_manage_categories', label: 'Manage Categories', description: 'Create and edit library categories' }
+      'dashboard_view'
     ]
   }
 ];
@@ -69,16 +63,14 @@ export function UserForm({ user, onSave, onCancel }: UserFormProps) {
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    role: user?.role || 'user',
+    role: user?.role || 'viewer',
     position: user?.position || '',
     status: user?.status || 'active',
     password: '',
-    confirmPassword: '',
-    permissions: user?.permissions || []
+    confirmPassword: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(['users']);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -88,63 +80,13 @@ export function UserForm({ user, onSave, onCancel }: UserFormProps) {
     }
   };
 
-  const handlePermissionChange = (permission: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: checked 
-        ? [...prev.permissions, permission]
-        : prev.permissions.filter(p => p !== permission)
-    }));
+  const getRolePermissions = (roleValue: string) => {
+    const role = roles.find(r => r.value === roleValue);
+    return role ? role.permissions : [];
   };
 
-  const toggleCategory = (categoryId: string) => {
-    setExpandedCategories(prev => 
-      prev.includes(categoryId) 
-        ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
-    );
-  };
-
-  const handleCategorySelectAll = (categoryId: string, checked: boolean) => {
-    const category = permissionCategories.find(cat => cat.id === categoryId);
-    if (!category) return;
-
-    const categoryPermissions = category.permissions.map(p => p.value);
-    setFormData(prev => {
-      let newPermissions = [...prev.permissions];
-      
-      if (checked) {  
-        // Add all category permissions
-        categoryPermissions.forEach(perm => {
-          if (!newPermissions.includes(perm)) {
-            newPermissions.push(perm);
-          }
-        });
-      } else {
-        // Remove all category permissions
-        newPermissions = newPermissions.filter(perm => !categoryPermissions.includes(perm));
-      }
-      
-      return { ...prev, permissions: newPermissions };
-    });
-  };
-
-  const isCategorySelected = (categoryId: string) => {
-    const category = permissionCategories.find(cat => cat.id === categoryId);
-    if (!category) return false;
-    
-    const categoryPermissions = category.permissions.map(p => p.value);
-    return categoryPermissions.every(perm => formData.permissions.includes(perm));
-  };
-
-  const isCategoryPartiallySelected = (categoryId: string) => {
-    const category = permissionCategories.find(cat => cat.id === categoryId);
-    if (!category) return false;
-    
-    const categoryPermissions = category.permissions.map(p => p.value);
-    const selectedCount = categoryPermissions.filter(perm => formData.permissions.includes(perm)).length;
-    return selectedCount > 0 && selectedCount < categoryPermissions.length;
-  };
+  const selectedRole = roles.find(r => r.value === formData.role);
+  const rolePermissions = getRolePermissions(formData.role);
 
   const validateForm = () => {
     const newErrors: any = {};
@@ -169,10 +111,6 @@ export function UserForm({ user, onSave, onCancel }: UserFormProps) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    if (formData.permissions.length === 0) {
-      newErrors.permissions = 'At least one permission is required';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -184,7 +122,8 @@ export function UserForm({ user, onSave, onCancel }: UserFormProps) {
       const userData: any = {
         ...formData,
         id: user?.id || Date.now(),
-        lastLogin: user?.lastLogin || new Date().toISOString().split('T')[0]
+        lastLogin: user?.lastLogin || new Date().toISOString().split('T')[0],
+        permissions: rolePermissions
       };
 
       // Remove password fields if not changed
@@ -206,7 +145,7 @@ export function UserForm({ user, onSave, onCancel }: UserFormProps) {
           <div>
             <CardTitle>{user ? 'Edit User' : 'Add New User'}</CardTitle>
             <CardDescription>
-              {user ? 'Update user information and permissions' : 'Create a new user account with specific permissions'}
+              {user ? 'Update user information and role' : 'Create a new user account with predefined role permissions'}
             </CardDescription>
           </div>
           <Button variant="ghost" size="sm" onClick={onCancel}>
@@ -325,70 +264,30 @@ export function UserForm({ user, onSave, onCancel }: UserFormProps) {
             </div>
           )}
 
-          {/* Permissions */}
+          {/* Permissions Preview */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Permissions</h3>
-            <div className="space-y-3">
-              {permissionCategories.map(category => {
-                const isExpanded = expandedCategories.includes(category.id);
-                const isSelected = isCategorySelected(category.id);
-                const isPartial = isCategoryPartiallySelected(category.id);
-                
-                return (
-                  <div key={category.id} className="border rounded-lg">
-                    <div 
-                      className="flex items-center space-x-3 p-3 cursor-pointer hover:bg-muted/50"
-                      onClick={() => toggleCategory(category.id)}
-                    >
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={(checked: boolean) => {
-                          handleCategorySelectAll(category.id, checked);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <Label className="font-medium cursor-pointer">
-                            {category.label}
-                          </Label>
-                          <span className="text-xs text-muted-foreground">
-                            ({category.permissions.length} permissions)
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{category.description}</p>
-                      </div>
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </div>
-                    
-                    {isExpanded && (
-                      <div className="border-t p-3 space-y-2 bg-muted/20">
-                        {category.permissions.map(permission => (
-                          <div key={permission.value} className="flex items-start space-x-3 pl-6">
-                            <Checkbox
-                              id={permission.value}
-                              checked={formData.permissions.includes(permission.value)}
-                              onCheckedChange={(checked: boolean) => handlePermissionChange(permission.value, checked)}
-                            />
-                            <div className="flex-1">
-                              <Label htmlFor={permission.value} className="font-medium text-sm">
-                                {permission.label}
-                              </Label>
-                              <p className="text-xs text-muted-foreground">{permission.description}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+            <h3 className="text-lg font-medium">Role Permissions</h3>
+            <div className="border rounded-lg p-4 bg-muted/20">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span className="font-medium">{selectedRole?.label}</span>
+                <span className="text-sm text-muted-foreground">({rolePermissions.length} permissions)</span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">{selectedRole?.description}</p>
+              
+              <div className="grid gap-2">
+                {rolePermissions.map((permission, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span className="font-mono text-xs">{permission}</span>
                   </div>
-                );
-              })}
+                ))}
+              </div>
+              
+              <p className="text-xs text-muted-foreground mt-4">
+                Permissions are automatically assigned based on the selected role.
+              </p>
             </div>
-            {errors.permissions && <p className="text-sm text-red-500">{errors.permissions}</p>}
           </div>
 
           {/* Actions */}
