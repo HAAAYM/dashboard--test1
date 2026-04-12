@@ -41,12 +41,12 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
     }
 
     // === STEP 2: Auth Verification (Mock) ===
-    // In V1, we assume auth is valid (real auth in V2)
+    // In V1, we extract auth from context or use mock validation
     const authResult = {
       valid: true,
-      userId: data.userId,
-      role: data.role,
-      message: "Auth mock - always valid in V1"
+      userId: context.auth?.uid || data.userId || 'mock_user_v1',
+      role: context.auth?.token?.role || data.role || 'student',
+      message: "Auth extracted from context or request (V1 mock)"
     };
 
     if (!authResult.valid) {
