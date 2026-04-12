@@ -220,7 +220,7 @@ function createBlockedResponse(reason, requestId, startTime) {
     source: "fallback",
     requestId,
     timestamp: new Date().toISOString(),
-    responseTimeMs: Date.now() - startTime,
+   responseTimeMs: Date.now() - startTime
   };
 }
 
@@ -232,7 +232,7 @@ function createErrorResponse(errorMessage, requestId, startTime) {
     source: "fallback",
     requestId,
     timestamp: new Date().toISOString(),
-    responseTimeMs: Date.now() - startTime,
+    responseTimeMs: Date.now() - startTime
   };
 }
 
