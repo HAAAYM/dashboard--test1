@@ -2,12 +2,8 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -16,11 +12,7 @@ import {
   Users2, 
   Settings, 
   FileText, 
-  Database,
-  Plus,
-  Edit,
-  Trash2,
-  Copy
+  Database
 } from 'lucide-react';
 
 interface Permission {
@@ -283,12 +275,9 @@ const mockRoles: Role[] = [
 ];
 
 export function PermissionsManager() {
-  const [permissions, setPermissions] = useState(mockPermissions);
-  const [roles, setRoles] = useState(mockRoles);
+  const [permissions] = useState(mockPermissions);
+  const [roles] = useState(mockRoles);
   const [selectedRole, setSelectedRole] = useState<Role | null>(mockRoles[0]);
-  const [editingRole, setEditingRole] = useState<Role | null>(null);
-  const [newRoleName, setNewRoleName] = useState('');
-  const [newRoleDescription, setNewRoleDescription] = useState('');
 
   const categories = Array.from(new Set(permissions.map(p => p.category)));
 
@@ -296,62 +285,12 @@ export function PermissionsManager() {
     return permissions.filter(p => p.category === category);
   };
 
-  const handlePermissionToggle = (permissionId: string, checked: boolean) => {
-    if (!selectedRole) return;
-
-    const updatedPermissions = checked
-      ? [...selectedRole.permissions, permissionId]
-      : selectedRole.permissions.filter(p => p !== permissionId);
-
-    const updatedRole = { ...selectedRole, permissions: updatedPermissions };
-    setSelectedRole(updatedRole);
-    
-    // Update roles array
-    setRoles(prev => prev.map(role => 
-      role.id === updatedRole.id ? updatedRole : role
-    ));
-  };
-
-  const handleCreateRole = () => {
-    if (!newRoleName.trim()) return;
-
-    const newRole: Role = {
-      id: newRoleName.toLowerCase().replace(/\s+/g, '_'),
-      name: newRoleName,
-      description: newRoleDescription,
-      permissions: [],
-      color: 'bg-purple-600'
-    };
-
-    setRoles(prev => [...prev, newRole]);
-    setNewRoleName('');
-    setNewRoleDescription('');
-  };
-
-  const handleDeleteRole = (roleId: string) => {
-    if (roleId === 'admin') return; // Cannot delete admin role
-    
-    setRoles(prev => prev.filter(role => role.id !== roleId));
-    if (selectedRole?.id === roleId) {
-      setSelectedRole(mockRoles[0]);
-    }
-  };
-
-  const handleDuplicateRole = (role: Role) => {
-    const duplicatedRole: Role = {
-      ...role,
-      id: `${role.id}_copy`,
-      name: `${role.name} (Copy)`
-    };
-    setRoles(prev => [...prev, duplicatedRole]);
-  };
-
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground">Permissions & Roles</h2>
         <p className="text-muted-foreground">
-          Manage user roles and their associated permissions
+          View current system roles and their associated permissions
         </p>
       </div>
 
@@ -372,29 +311,10 @@ export function PermissionsManager() {
                   Roles
                 </CardTitle>
                 <CardDescription>
-                  Create and manage user roles
+                  View current system roles
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Create New Role */}
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="New role name..."
-                      value={newRoleName}
-                      onChange={(e) => setNewRoleName(e.target.value)}
-                    />
-                    <Button onClick={handleCreateRole} disabled={!newRoleName.trim()}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <Input
-                    placeholder="Role description..."
-                    value={newRoleDescription}
-                    onChange={(e) => setNewRoleDescription(e.target.value)}
-                  />
-                </div>
-
                 {/* Roles List */}
                 <div className="space-y-2">
                   {roles.map(role => (
@@ -414,29 +334,6 @@ export function PermissionsManager() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary">{role.permissions.length} permissions</Badge>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDuplicateRole(role);
-                          }}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        {role.id !== 'admin' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteRole(role.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
                       </div>
                     </div>
                   ))}
@@ -453,7 +350,7 @@ export function PermissionsManager() {
                     {selectedRole.name} Permissions
                   </CardTitle>
                   <CardDescription>
-                    Configure permissions for this role
+                    Permissions assigned to this role
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -465,21 +362,23 @@ export function PermissionsManager() {
                       <div className="space-y-2">
                         {getPermissionsByCategory(category).map(permission => {
                           const Icon = permission.icon;
-                          const isChecked = selectedRole.permissions.includes(permission.id);
+                          const hasPermission = selectedRole.permissions.includes(permission.id);
                           
                           return (
                             <div key={permission.id} className="flex items-center space-x-3">
-                              <Checkbox
-                                id={permission.id}
-                                checked={isChecked}
-                                onCheckedChange={(checked: boolean) => handlePermissionToggle(permission.id, checked)}
-                              />
+                              <div className={`w-4 h-4 rounded border ${hasPermission ? 'bg-green-500 border-green-500' : 'bg-gray-200 border-gray-300'}`}>
+                                {hasPermission && (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                                  </div>
+                                )}
+                              </div>
                               <div className="flex items-center gap-2 flex-1">
                                 <Icon className="h-4 w-4 text-muted-foreground" />
-                                <Label htmlFor={permission.id} className="flex-1 cursor-pointer">
+                                <div className="flex-1">
                                   <div className="font-medium">{permission.name}</div>
                                   <div className="text-sm text-muted-foreground">{permission.description}</div>
-                                </Label>
+                                </div>
                               </div>
                             </div>
                           );
