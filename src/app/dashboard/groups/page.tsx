@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Users, Shield, Archive } from 'lucide-react';
@@ -25,7 +25,7 @@ const mockCurrentUser: User = {
 };
 
 function GroupsPageContent() {
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const router = useRouter();
   const { filteredGroups, filters } = useGroups();
 
   const handleGroupUpdated = () => {
@@ -33,7 +33,7 @@ function GroupsPageContent() {
   };
 
   const handleViewGroupDetails = (group: Group) => {
-    setSelectedGroup(group);
+    router.push(`/dashboard/groups/${group.id}`);
   };
 
   // Calculate stats based on filtered groups
@@ -160,28 +160,6 @@ function GroupsPageContent() {
           />
         </CardContent>
       </Card>
-
-      {/* Group Details Modal - Placeholder for future implementation */}
-      {selectedGroup && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">{selectedGroup.name}</h2>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setSelectedGroup(null)}
-                >
-                  Close
-                </Button>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Group details functionality will be implemented in the next phase.
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
