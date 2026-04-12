@@ -1,4 +1,4 @@
-const { logger } = require("firebase-functions/v2");
+const { logger } = require("firebase-functions");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 
@@ -40,17 +40,17 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
     }
 
     // === STEP 2: Auth Verification (Mock) ===
-    // In V1, we extract auth from context or use mock validation
+    // In V1, we extract auth from context or return error for unauthenticated requests
+    if (!context.auth) {
+      return createErrorResponse("Unauthenticated request - no auth context provided", requestId, startTime);
+    }
+
     const authResult = {
       valid: true,
-      userId: context.auth?.uid || data.userId || 'mock_user_v1',
-      role: context.auth?.token?.role || data.role || 'student',
-      message: "Auth extracted from context or request (V1 mock)"
+      userId: context.auth.uid,
+      role: context.auth.token?.role || 'student',
+      message: "Auth extracted from context (V1 mock)"
     };
-
-    if (!authResult.valid) {
-      return createErrorResponse("Authentication failed", requestId, startTime);
-    }
 
     // === STEP 3: Read AI Settings ===
     const aiSettingsDoc = await db.collection('ai_settings').doc('global').get();
@@ -93,7 +93,7 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
       questionType: data.questionType,
       question: data.question,
       timestamp: new Date().toISOString(),
-      responseTime: Date.now() - startTime,
+      responseTimeMs: Date.now() - startTime,
       source: 'fallback',
       success: true,
       confidence: 0.0,
@@ -110,7 +110,7 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
       source: 'fallback',
       requestId: requestId,
       timestamp: new Date().toISOString(),
-      responseTime: Date.now() - startTime,
+      responseTimeMs: Date.now() - startTime,
       relatedData: null
     };
 
