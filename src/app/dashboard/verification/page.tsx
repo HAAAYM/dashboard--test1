@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Check, X, Eye, FileText, Shield, UserCheck, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { verificationStats, verificationRequests } from '@/features/verification/verification-mock';
 
 export default function VerificationPage() {
   const { t } = useTranslation();
@@ -36,7 +37,7 @@ export default function VerificationPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">23</div>
+            <div className="text-2xl font-bold">{verificationStats.pendingRequests}</div>
             <p className="text-xs text-muted-foreground">{t('common.stats.pending')}</p>
           </CardContent>
         </Card>
@@ -47,7 +48,7 @@ export default function VerificationPage() {
             <Check className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
+            <div className="text-2xl font-bold">{verificationStats.approvedToday}</div>
             <p className="text-xs text-muted-foreground">{t('common.time.fromLastMonth', { value: '+25%' })}</p>
           </CardContent>
         </Card>
@@ -58,7 +59,7 @@ export default function VerificationPage() {
             <X className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-2xl font-bold">{verificationStats.rejectedToday}</div>
             <p className="text-xs text-muted-foreground">Insufficient documents</p>
           </CardContent>
         </Card>
@@ -69,7 +70,7 @@ export default function VerificationPage() {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">847</div>
+            <div className="text-2xl font-bold">{verificationStats.totalVerified}</div>
             <p className="text-xs text-muted-foreground">Verified users</p>
           </CardContent>
         </Card>
@@ -110,130 +111,82 @@ export default function VerificationPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs font-medium">AJ</span>
+              {verificationRequests.map((request) => (
+                <TableRow key={request.id}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-xs font-medium">{request.userInitials}</span>
+                      </div>
+                      <div>
+                        <div className="font-medium">{request.userName}</div>
+                        <div className="text-sm text-muted-foreground">{request.userEmail}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium">Alice Johnson</div>
-                      <div className="text-sm text-muted-foreground">alice@university.edu</div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{request.type}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      <span>{request.documents} {request.documents === 1 ? 'document' : 'documents'}</span>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">Student</Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    <span>1 document</span>
-                  </div>
-                </TableCell>
-                <TableCell>2 days ago</TableCell>
-                <TableCell>
-                  <Badge variant="secondary" className="bg-yellow-600 text-white">
-                    Pending
-                  </Badge>
-                </TableCell>
-                <TableCell>-</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-green-600 hover:text-green-700">
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs font-medium">JD</span>
+                  </TableCell>
+                  <TableCell>{request.submitted}</TableCell>
+                  <TableCell>
+                    {request.status === 'Pending' && (
+                      <Badge variant="secondary" className="bg-yellow-600 text-white">
+                        {request.status}
+                      </Badge>
+                    )}
+                    {request.status === 'Approved' && (
+                      <Badge variant="default" className="bg-green-600">
+                        {request.status}
+                      </Badge>
+                    )}
+                    {request.status === 'Rejected' && (
+                      <Badge variant="destructive">
+                        {request.status}
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {request.reviewedBy ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-xs">{request.reviewedByInitials}</span>
+                        </div>
+                        <span>{request.reviewedBy}</span>
+                      </div>
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      {request.status === 'Pending' && (
+                        <>
+                          <Button variant="outline" size="sm" className="text-green-600 hover:text-green-700">
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                      {request.status !== 'Pending' && (
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                    <div>
-                      <div className="font-medium">Dr. John Doe</div>
-                      <div className="text-sm text-muted-foreground">john.doe@university.edu</div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">Doctor</Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    <span>1 document</span>
-                  </div>
-                </TableCell>
-                <TableCell>5 days ago</TableCell>
-                <TableCell>
-                  <Badge variant="default" className="bg-green-600">
-                    Approved
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs">SA</span>
-                    </div>
-                    <span>Super Admin</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs font-medium">BW</span>
-                    </div>
-                    <div>
-                      <div className="font-medium">Bob Wilson</div>
-                      <div className="text-sm text-muted-foreground">bob@university.edu</div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">Faculty</Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    <span>2 documents</span>
-                  </div>
-                </TableCell>
-                <TableCell>1 day ago</TableCell>
-                <TableCell>
-                  <Badge variant="destructive">
-                    Rejected
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs">JS</span>
-                    </div>
-                    <span>Jane Smith</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </CardContent>

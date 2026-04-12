@@ -100,114 +100,159 @@ export function GroupsTable({ currentUser, onGroupUpdated, onViewDetails }: Grou
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[50px]"></TableHead>
-          <TableHead 
-            className="cursor-pointer hover:bg-muted/50"
-            onClick={() => handleSort('name')}
-          >
-            Group Name
-          </TableHead>
-          <TableHead 
-            className="cursor-pointer hover:bg-muted/50"
-            onClick={() => handleSort('type')}
-          >
-            Type
-          </TableHead>
-          <TableHead 
-            className="cursor-pointer hover:bg-muted/50"
-            onClick={() => handleSort('status')}
-          >
-            Status
-          </TableHead>
-          <TableHead 
-            className="cursor-pointer hover:bg-muted/50"
-            onClick={() => handleSort('membersCount')}
-          >
-            Members
-          </TableHead>
-          <TableHead>Owner</TableHead>
-          <TableHead 
-            className="cursor-pointer hover:bg-muted/50"
-            onClick={() => handleSort('lastActivity')}
-          >
-            Last Activity
-          </TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[50px]"></TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50 font-medium"
+              onClick={() => handleSort('name')}
+            >
+              <div className="flex items-center gap-1">
+                Group Name
+                {sortConfig.key === 'name' && (
+                  <span className="text-xs text-muted-foreground">
+                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50 font-medium"
+              onClick={() => handleSort('type')}
+            >
+              <div className="flex items-center gap-1">
+                Type
+                {sortConfig.key === 'type' && (
+                  <span className="text-xs text-muted-foreground">
+                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50 font-medium"
+              onClick={() => handleSort('status')}
+            >
+              <div className="flex items-center gap-1">
+                Status
+                {sortConfig.key === 'status' && (
+                  <span className="text-xs text-muted-foreground">
+                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50 font-medium"
+              onClick={() => handleSort('membersCount')}
+            >
+              <div className="flex items-center gap-1">
+                Members
+                {sortConfig.key === 'membersCount' && (
+                  <span className="text-xs text-muted-foreground">
+                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
+              </div>
+            </TableHead>
+            <TableHead className="font-medium">Owner</TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50 font-medium"
+              onClick={() => handleSort('lastActivity')}
+            >
+              <div className="flex items-center gap-1">
+                Last Activity
+                {sortConfig.key === 'lastActivity' && (
+                  <span className="text-xs text-muted-foreground">
+                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
+              </div>
+            </TableHead>
+            <TableHead className="text-right font-medium">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
       <TableBody>
         {sortedGroups.map((group) => {
           const activity = getActivityLevel(group);
           
           return (
-            <TableRow key={group.id} className="hover:bg-muted/30">
-              <TableCell>
-                <Avatar className="h-8 w-8">
+            <TableRow key={group.id} className="hover:bg-muted/30 transition-colors">
+              <TableCell className="py-3">
+                <Avatar className="h-10 w-10">
                   <AvatarImage src={group.avatar} alt={group.name} />
-                  <AvatarFallback>
+                  <AvatarFallback className="text-sm font-medium">
                     {group.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </TableCell>
-              <TableCell className="font-medium">
-                <div>
+              <TableCell className="py-3">
+                <div className="space-y-1">
                   <div 
-                    className="font-semibold hover:text-primary cursor-pointer transition-colors" 
+                    className="font-semibold text-foreground hover:text-primary cursor-pointer transition-colors" 
                     onClick={() => handleGroupClick(group.id)}
                   >
                     {group.name}
                   </div>
-                  <div className="text-sm text-muted-foreground truncate max-w-xs">
+                  <div className="text-sm text-muted-foreground line-clamp-2">
                     {group.description}
                   </div>
                 </div>
               </TableCell>
-              <TableCell>
+              <TableCell className="py-3">
                 <Badge 
                   variant="default" 
-                  className={getTypeBadgeColor(group.type)}
+                  className={`${getTypeBadgeColor(group.type)} text-xs font-medium px-2 py-1`}
                 >
                   {group.type.toUpperCase()}
                 </Badge>
               </TableCell>
-              <TableCell>
+              <TableCell className="py-3">
                 <Badge 
                   variant="default" 
-                  className={getStatusBadgeColor(group.status)}
+                  className={`${getStatusBadgeColor(group.status)} text-xs font-medium px-2 py-1`}
                 >
                   {group.status.charAt(0).toUpperCase() + group.status.slice(1)}
                 </Badge>
               </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{group.membersCount}</span>
-                  <span className="text-sm text-muted-foreground">
-                    ({group.moderatorsCount} mods)
-                  </span>
+              <TableCell className="py-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">{group.membersCount}</span>
+                  </div>
+                  {group.moderatorsCount > 0 && (
+                    <Badge variant="outline" className="text-xs">
+                      {group.moderatorsCount} mods
+                    </Badge>
+                  )}
                 </div>
               </TableCell>
-              <TableCell>
-                <div className="text-sm">
-                  Owner ID: {group.ownerId}
+              <TableCell className="py-3">
+                <div className="text-sm text-muted-foreground">
+                  ID: {group.ownerId}
                 </div>
               </TableCell>
-              <TableCell>
-                <div className="space-y-1">
+              <TableCell className="py-3">
+                <div className="space-y-2">
                   <div className="text-sm">
                     {group.lastActivity ? formatDate(group.lastActivity) : 'Never'}
                   </div>
-                  <div className={`text-xs font-medium ${activity.color}`}>
-                    Activity: {activity.level}
+                  <div className={`text-xs font-medium px-2 py-1 rounded ${activity.color === 'text-green-600' ? 'bg-green-100 text-green-700' : activity.color === 'text-yellow-600' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>
+                    {activity.level} Activity
                   </div>
                 </div>
               </TableCell>
-              <TableCell className="text-right">
-                <Button variant="ghost" size="sm">
-                  <MoreHorizontal className="h-4 w-4" />
+              <TableCell className="py-3 text-right">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="hover:bg-muted/50 transition-colors"
+                  onClick={() => handleGroupClick(group.id)}
+                >
+                  <Eye className="h-4 w-4" />
                 </Button>
               </TableCell>
             </TableRow>
@@ -215,5 +260,6 @@ export function GroupsTable({ currentUser, onGroupUpdated, onViewDetails }: Grou
         })}
       </TableBody>
     </Table>
+    </div>
   );
 }

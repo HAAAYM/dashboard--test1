@@ -169,89 +169,86 @@ export default function GroupDetailsPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <Eye className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="members" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Members
-          </TabsTrigger>
-          <TabsTrigger value="messages" className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Messages
-          </TabsTrigger>
-          <TabsTrigger value="media" className="flex items-center gap-2">
-            <Image className="h-4 w-4" />
-            Media
-          </TabsTrigger>
-          <TabsTrigger value="publish-requests" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Publish Requests
-          </TabsTrigger>
-          <TabsTrigger value="moderation" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Moderation
-          </TabsTrigger>
-          <TabsTrigger value="reports" className="flex items-center gap-2">
-            <Flag className="h-4 w-4" />
-            Reports
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Settings
-          </TabsTrigger>
+        <TabsList className="relative w-full">
+          <div className="overflow-x-auto border-b">
+            <div className="flex w-full min-w-max">
+              <TabsTrigger value="overview" className="flex items-center gap-2 px-3 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground transition-all duration-200">
+                <Eye className="h-4 w-4" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="members" className="flex items-center gap-2 px-3 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground transition-all duration-200">
+                <Users className="h-4 w-4" />
+                Members
+              </TabsTrigger>
+              <TabsTrigger value="messages" className="flex items-center gap-2 px-3 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground transition-all duration-200">
+                <MessageSquare className="h-4 w-4" />
+                Messages
+              </TabsTrigger>
+              <TabsTrigger value="media" className="flex items-center gap-2 px-3 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground transition-all duration-200">
+                <Image className="h-4 w-4" />
+                Media
+              </TabsTrigger>
+              <TabsTrigger value="publish-requests" className="flex items-center gap-2 px-3 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground transition-all duration-200">
+                <FileText className="h-4 w-4" />
+                Publish Requests
+              </TabsTrigger>
+              <TabsTrigger value="moderation" className="flex items-center gap-2 px-3 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground transition-all duration-200">
+                <Shield className="h-4 w-4" />
+                Moderation
+              </TabsTrigger>
+              <TabsTrigger value="reports" className="flex items-center gap-2 px-3 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground transition-all duration-200">
+                <Flag className="h-4 w-4" />
+                Reports
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2 px-3 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground transition-all duration-200">
+                <Settings className="h-4 w-4" />
+                Settings
+              </TabsTrigger>
+            </div>
+          </div>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-6 p-4">
           <GroupOverview group={group} />
         </TabsContent>
-
-        <TabsContent value="members" className="space-y-6">
+        <TabsContent value="members" className="space-y-6 p-4">
           <GroupMembersTab 
             group={group} 
             currentUser={mockCurrentUser}
             onMemberUpdated={handleGroupUpdated}
           />
         </TabsContent>
-
-        <TabsContent value="messages" className="space-y-6">
+        <TabsContent value="messages" className="space-y-6 p-4">
           <GroupMessagesTab 
             group={group} 
             currentUser={mockCurrentUser}
           />
         </TabsContent>
-
-        <TabsContent value="media" className="space-y-6">
+        <TabsContent value="media" className="space-y-6 p-4">
           <GroupMediaTab 
             group={group} 
             currentUser={mockCurrentUser}
           />
         </TabsContent>
-
-        <TabsContent value="publish-requests" className="space-y-6">
+        <TabsContent value="publish-requests" className="space-y-6 p-4">
           <GroupPublishRequestsTab 
             group={group} 
             currentUser={mockCurrentUser}
           />
         </TabsContent>
-
-        <TabsContent value="moderation"  className="space-y-6">
+        <TabsContent value="moderation" className="space-y-6 p-4">
           <GroupModerationTab 
             group={group} 
             currentUser={mockCurrentUser}
           />
         </TabsContent>
-
-        <TabsContent value="reports" className="space-y-6">
+        <TabsContent value="reports" className="space-y-6 p-4">
           <GroupReportsTab 
             group={group} 
             currentUser={mockCurrentUser}
           />
         </TabsContent>
-
-        <TabsContent value="settings" className="space-y-6">
+        <TabsContent value="settings" className="space-y-6 p-4">
           <GroupSettings 
             group={group} 
             currentUser={mockCurrentUser}

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Download, Upload, Trash2, MoreHorizontal, FileText, File, Image, Video } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { libraryStats, libraryFiles } from '@/features/library/library-mock';
 
 export default function LibraryPage() {
   const { t } = useTranslation();
@@ -34,7 +35,7 @@ export default function LibraryPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">156</div>
+            <div className="text-2xl font-bold">{libraryStats.totalFiles}</div>
             <p className="text-xs text-muted-foreground">{t('common.time.fromLastMonth', { value: '+18%' })}</p>
           </CardContent>
         </Card>
@@ -45,7 +46,7 @@ export default function LibraryPage() {
             <Download className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2,847</div>
+            <div className="text-2xl font-bold">{libraryStats.totalDownloads}</div>
             <p className="text-xs text-muted-foreground">{t('common.time.fromLastMonth', { value: '+32%' })}</p>
           </CardContent>
         </Card>
@@ -56,7 +57,7 @@ export default function LibraryPage() {
             <File className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2.1 GB</div>
+            <div className="text-2xl font-bold">{libraryStats.storageUsed}</div>
             <p className="text-xs text-muted-foreground">{t('library.descriptions.storagePercentage')}</p>
           </CardContent>
         </Card>
@@ -67,7 +68,7 @@ export default function LibraryPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">{libraryStats.totalCategories}</div>
             <p className="text-xs text-muted-foreground">{t('library.descriptions.activeCategories')}</p>
           </CardContent>
         </Card>
@@ -81,7 +82,7 @@ export default function LibraryPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">89</div>
+            <div className="text-2xl font-bold">{libraryStats.documents}</div>
             <p className="text-xs text-muted-foreground">{t('library.descriptions.totalFiles')}</p>
           </CardContent>
         </Card>
@@ -92,7 +93,7 @@ export default function LibraryPage() {
             <Image className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">45</div>
+            <div className="text-2xl font-bold">{libraryStats.images}</div>
             <p className="text-xs text-muted-foreground">{t('library.descriptions.images')}</p>
           </CardContent>
         </Card>
@@ -103,7 +104,7 @@ export default function LibraryPage() {
             <Video className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">18</div>
+            <div className="text-2xl font-bold">{libraryStats.videos}</div>
             <p className="text-xs text-muted-foreground">{t('library.descriptions.videos')}</p>
           </CardContent>
         </Card>
@@ -114,7 +115,7 @@ export default function LibraryPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">4</div>
+            <div className="text-2xl font-bold">{libraryStats.other}</div>
             <p className="text-xs text-muted-foreground">{t('library.descriptions.other')}</p>
           </CardContent>
         </Card>
@@ -155,150 +156,59 @@ export default function LibraryPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="flex items-center space-x-3">
-                    <FileText className="h-8 w-8 text-blue-600" />
-                    <div>
-                      <div className="font-medium">Algorithm Textbook PDF</div>
-                      <div className="text-sm text-muted-foreground">Comprehensive guide to algorithms and data structures</div>
-                      <div className="flex gap-1 mt-1">
-                        <Badge variant="outline" className="text-xs">algorithms</Badge>
-                        <Badge variant="outline" className="text-xs">textbook</Badge>
-                        <Badge variant="outline" className="text-xs">computer-science</Badge>
+              {libraryFiles.map((file) => (
+                <TableRow key={file.id}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center space-x-3">
+                      {file.type === 'document' && <FileText className="h-8 w-8 text-blue-600" />}
+                      {file.type === 'image' && <Image className="h-8 w-8 text-purple-600" />}
+                      {file.type === 'video' && <Video className="h-8 w-8 text-red-600" />}
+                      {file.type === 'other' && <File className="h-8 w-8 text-gray-600" />}
+                      <div>
+                        <div className="font-medium">{file.name}</div>
+                        <div className="text-sm text-muted-foreground">{file.description}</div>
+                        <div className="flex gap-1 mt-1">
+                          {file.tags.map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">CS Resources</Badge>
-                </TableCell>
-                <TableCell>15 MB</TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs">JD</span>
-                    </div>
-                    <span>Dr. John Doe</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Download className="h-4 w-4" />
-                    <span>156</span>
-                  </div>
-                </TableCell>
-                <TableCell>Jan 15, 2024</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="flex items-center space-x-3">
-                    <File className="h-8 w-8 text-green-600" />
-                    <div>
-                      <div className="font-medium">Study Schedule Template</div>
-                      <div className="text-sm text-muted-foreground">Weekly study schedule template for students</div>
-                      <div className="flex gap-1 mt-1">
-                        <Badge variant="outline" className="text-xs">template</Badge>
-                        <Badge variant="outline" className="text-xs">schedule</Badge>
-                        <Badge variant="outline" className="text-xs">productivity</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{file.category}</Badge>
+                  </TableCell>
+                  <TableCell>{file.size}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-xs">{file.uploadedByInitials}</span>
                       </div>
+                      <span>{file.uploadedBy}</span>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">Templates</Badge>
-                </TableCell>
-                <TableCell>512 KB</TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs">JS</span>
-                    </div>
-                    <span>Jane Smith</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Download className="h-4 w-4" />
-                    <span>89</span>
-                  </div>
-                </TableCell>
-                <TableCell>Feb 1, 2024</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button variant="outline" size="sm">
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
                       <Download className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="flex items-center space-x-3">
-                    <Image className="h-8 w-8 text-purple-600" />
-                    <div>
-                      <div className="font-medium">Campus Map</div>
-                      <div className="text-sm text-muted-foreground">Interactive campus map with building locations</div>
-                      <div className="flex gap-1 mt-1">
-                        <Badge variant="outline" className="text-xs">map</Badge>
-                        <Badge variant="outline" className="text-xs">campus</Badge>
-                        <Badge variant="outline" className="text-xs">navigation</Badge>
-                      </div>
+                      <span>{file.downloads}</span>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">General</Badge>
-                </TableCell>
-                <TableCell>3.2 MB</TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs">AJ</span>
+                  </TableCell>
+                  <TableCell>{file.uploadDate}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button variant="outline" size="sm">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <span>Alice Johnson</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Download className="h-4 w-4" />
-                    <span>234</span>
-                  </div>
-                </TableCell>
-                <TableCell>Feb 10, 2024</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </CardContent>
