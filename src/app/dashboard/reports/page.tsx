@@ -232,7 +232,7 @@ export default function ReportsPage() {
           );
           break;
         case 'users':
-          filtered = filtered.filter(report => report.type === 'user');
+          filtered = filtered.filter(report => report.target.type === 'user');
           break;
         case 'library':
           filtered = filtered.filter(report => report.target.type === 'library_book');
