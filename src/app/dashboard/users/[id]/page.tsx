@@ -41,6 +41,60 @@ import {
   Send
 } from 'lucide-react';
 
+// Local types for this page only
+interface UserGroup {
+  id: number;
+  name: string;
+  type: string;
+  members: number;
+  role: string;
+  joinedAt: string;
+}
+
+interface UserWarning {
+  id: number;
+  type: string;
+  description: string;
+  date: string;
+  severity: string;
+  status: string;
+}
+
+interface UserActivity {
+  id: number;
+  type: string;
+  description: string;
+  date: string;
+  details: string;
+}
+
+interface UserData {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  avatar: string;
+  role: string;
+  college: string;
+  department: string;
+  major: string;
+  year: string;
+  studentId: string;
+  status: string;
+  verified: boolean;
+  joinDate: string;
+  lastLogin: string;
+  accountAge: string;
+  posts: number;
+  comments: number;
+  likes: number;
+  warnings: number;
+  reports: number;
+  groups: UserGroup[];
+  warningHistory: UserWarning[];
+  activities: UserActivity[];
+}
+
 // Mock user data - in real app this would come from API
 const mockUserData = {
   id: 1,
@@ -144,9 +198,14 @@ const mockUserData = {
 export default function UserProfilePage() {
   const params = useParams();
   const userId = params.id as string;
-  const [user, setUser] = useState(mockUserData);
-  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
-  const [messageData, setMessageData] = useState({
+  const [user, setUser] = useState<UserData>(mockUserData as UserData);
+  const [messageDialogOpen, setMessageDialogOpen] = useState<boolean>(false);
+  const [messageData, setMessageData] = useState<{
+    title: string;
+    message: string;
+    type: string;
+    priority: string;
+  }>({
     title: '',
     message: '',
     type: 'notification',
@@ -176,13 +235,13 @@ export default function UserProfilePage() {
 
   const handleBanUser = () => {
     if (confirm('Are you sure you want to ban this user?')) {
-      setUser(prev => ({ ...prev, status: 'banned' }));
+      setUser((prev: UserData) => ({ ...prev, status: 'banned' }));
     }
   };
 
   const handleSuspendUser = () => {
     if (confirm('Are you sure you want to suspend this user?')) {
-      setUser(prev => ({ ...prev, status: 'suspended' }));
+      setUser((prev: UserData) => ({ ...prev, status: 'suspended' }));
     }
   };
 
@@ -320,7 +379,7 @@ export default function UserProfilePage() {
                   <Textarea
                     placeholder="Type your message here..."
                     value={messageData.message}
-                    onChange={(e) => setMessageData(prev => ({ ...prev, message: e.target.value }))}
+                    onChange={(e) => setMessageData((prev: typeof messageData) => ({ ...prev, message: e.target.value }))}
                     rows={4}
                   />
                 </div>
@@ -368,7 +427,7 @@ export default function UserProfilePage() {
               <Avatar className="h-32 w-32">
                 <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback className="text-4xl">
-                  {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  {user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="text-center">
@@ -507,7 +566,7 @@ export default function UserProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {user.groups.map((group) => (
+            {user.groups.map((group: UserGroup) => (
               <div key={group.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center gap-4">
                   <div className="p-2 bg-primary/10 rounded-lg">
@@ -545,7 +604,7 @@ export default function UserProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {user.warningHistory.map((warning) => (
+            {user.warningHistory.map((warning: UserWarning) => (
               <div key={warning.id} className="flex items-start gap-4 p-4 border rounded-lg">
                 <div className="p-2 bg-orange-100 rounded-lg">
                   <AlertTriangle className="h-5 w-5 text-orange-600" />
@@ -580,7 +639,7 @@ export default function UserProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {user.activities.map((activity) => (
+            {user.activities.map((activity: UserActivity) => (
               <div key={activity.id} className="flex items-start gap-4 p-4 border rounded-lg">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <Activity className="h-5 w-5 text-blue-600" />
