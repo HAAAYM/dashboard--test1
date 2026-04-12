@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Eye, EyeOff, Trash2, MoreHorizontal, MessageSquare, Heart, Pin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { postsStats, posts } from '@/features/posts/posts-mock';
 
 export default function PostsPage() {
   const { t } = useTranslation();
@@ -40,7 +41,7 @@ export default function PostsPage() {
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
+            <div className="text-2xl font-bold">{postsStats.totalPosts.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">{t('dashboard.fromLastMonth', { value: '+23%' })}</p>
           </CardContent>
         </Card>
@@ -51,7 +52,7 @@ export default function PostsPage() {
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,189</div>
+            <div className="text-2xl font-bold">{postsStats.activePosts.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Currently visible</p>
           </CardContent>
         </Card>
@@ -62,7 +63,7 @@ export default function PostsPage() {
             <EyeOff className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">45</div>
+            <div className="text-2xl font-bold">{postsStats.hiddenPosts}</div>
             <p className="text-xs text-muted-foreground">Moderated content</p>
           </CardContent>
         </Card>
@@ -73,7 +74,7 @@ export default function PostsPage() {
             <Pin className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">{postsStats.pinnedPosts}</div>
             <p className="text-xs text-muted-foreground">Important announcements</p>
           </CardContent>
         </Card>
@@ -114,141 +115,57 @@ export default function PostsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="space-y-2 max-w-md">
-                    <div className="flex items-center gap-2">
-                      <Pin className="h-4 w-4 text-primary" />
-                      <span className="font-medium">Welcome to the Computer Science Department group!</span>
+              {posts.map((post) => (
+                <TableRow key={post.id}>
+                  <TableCell className="font-medium">
+                    <div className="space-y-2 max-w-md">
+                      <div className="flex items-center gap-2">
+                        {post.isPinned && <Pin className="h-4 w-4 text-primary" />}
+                        <span className={`font-medium ${post.status === 'hidden' ? 'text-muted-foreground' : ''}`}>
+                          {post.title}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {post.content}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      Feel free to share resources and ask questions. This is the official group for CS students and faculty...
-                    </p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs">JD</span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <div className={`h-6 w-6 rounded-full ${post.author === 'Unknown User' ? 'bg-muted' : 'bg-primary/10'} flex items-center justify-center`}>
+                        <span className="text-xs">{post.authorInitials}</span>
+                      </div>
+                      <span>{post.author}</span>
                     </div>
-                    <span>Dr. John Doe</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">CS Department</Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1">
-                      <Heart className="h-4 w-4" />
-                      <span>45</span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{post.group}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-1">
+                        <Heart className="h-4 w-4" />
+                        <span>{post.likes}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageSquare className="h-4 w-4" />
+                        <span>{post.comments}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <MessageSquare className="h-4 w-4" />
-                      <span>12</span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="default" className="bg-green-600">
-                    Active
-                  </Badge>
-                </TableCell>
-                <TableCell>Jan 1, 2024</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="space-y-2 max-w-md">
-                    <p className="font-medium">Looking for study partners for the upcoming algorithms exam</p>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      Anyone interested in forming a study group? I was thinking we could meet twice a week...
-                    </p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs">AJ</span>
-                    </div>
-                    <span>Alice Johnson</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">Study Group</Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1">
-                      <Heart className="h-4 w-4" />
-                      <span>8</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MessageSquare className="h-4 w-4" />
-                      <span>5</span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="default" className="bg-green-600">
-                    Active
-                  </Badge>
-                </TableCell>
-                <TableCell>3 days ago</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="space-y-2 max-w-md">
-                    <p className="font-medium text-muted-foreground">[Hidden] Spam content detected</p>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      This post has been automatically hidden due to suspicious content...
-                    </p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center">
-                      <span className="text-xs">??</span>
-                    </div>
-                    <span>Unknown User</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">General</Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1">
-                      <Heart className="h-4 w-4" />
-                      <span>0</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MessageSquare className="h-4 w-4" />
-                      <span>0</span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">
-                    Hidden
-                  </Badge>
-                </TableCell>
-                <TableCell>1 week ago</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={post.status === 'active' ? 'default' : 'secondary'} className={post.status === 'active' ? 'bg-green-600' : ''}>
+                      {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{post.posted}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </CardContent>
