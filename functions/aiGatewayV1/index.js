@@ -1,4 +1,4 @@
-const { logger } = require("firebase-functions");
+const { logger } = require("firebase-functions/v2");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 
@@ -30,7 +30,6 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
     // Log incoming request
     logger.info(`AI Gateway V1 - Request received: ${requestId}`, {
       requestId,
-      userId: data.userId || 'unknown',
       questionType: data.questionType || 'unknown'
     });
 
@@ -102,10 +101,10 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
       errorMessage: null
     });
 
-    // === STEP 9: Return Success Response ===
+    // === STEP 9: Return Fallback Response ===
     return {
       success: true,
-      status: 'success',
+      status: 'fallback',
       answer: fallbackResponse.answer,
       confidence: 0.0,
       source: 'fallback',
@@ -133,7 +132,7 @@ function generateRequestId() {
 }
 
 function validateInput(data) {
-  const required = ['userId', 'role', 'questionType', 'question'];
+  const required = ['question', 'questionType']; // Removed userId and role - should come from auth
   
   for (const field of required) {
     if (!data[field]) {
@@ -144,15 +143,7 @@ function validateInput(data) {
     }
   }
 
-  const validRoles = ['student', 'faculty', 'admin'];
   const validQuestionTypes = ['schedule', 'department', 'course', 'library', 'announcement'];
-
-  if (!validRoles.includes(data.role)) {
-    return {
-      valid: false,
-      error: `Invalid role: ${data.role}`
-    };
-  }
 
   if (!validQuestionTypes.includes(data.questionType)) {
     return {
