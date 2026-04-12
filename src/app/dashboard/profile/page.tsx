@@ -51,6 +51,16 @@ export default function ProfilePage() {
     );
   };
 
+  // Icon mapping for staff tabs
+  const getTabIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'Smartphone': return Smartphone;
+      case 'User': return User;
+      case 'Settings': return Settings;
+      default: return User;
+    }
+  };
+
   
   return (
     <div className="space-y-6">
@@ -120,7 +130,7 @@ export default function ProfilePage() {
       {/* Three Main Tabs with Prominent Borders */}
       <div className="grid gap-4 lg:grid-cols-3">
         {staffTabs.map((tab) => {
-          const Icon = tab.icon;
+          const Icon = getTabIcon(tab.icon);
           const isExpanded = expandedTabs.includes(tab.id);
           
           return (
