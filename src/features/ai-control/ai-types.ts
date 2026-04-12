@@ -15,7 +15,7 @@ export interface AISettings {
     faculty: number;
     admin: number;
   };
-  lastUpdated?: any; // Firestore timestamp
+  lastUpdated?: unknown; // Firestore timestamp
   updatedBy?: string;
 }
 
