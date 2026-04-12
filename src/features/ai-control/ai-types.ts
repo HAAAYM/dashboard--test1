@@ -10,6 +10,13 @@ export interface AISettings {
   confidenceThreshold: number;
   allowedTopics: string[];
   blockedTopics: string[];
+  rateLimits?: {
+    student: number;
+    faculty: number;
+    admin: number;
+  };
+  lastUpdated?: any; // Firestore timestamp
+  updatedBy?: string;
 }
 
 export interface AIServiceResponse<T> {

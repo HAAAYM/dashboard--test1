@@ -1,22 +1,36 @@
 import { AISettings, AIServiceResponse } from './ai-types';
 import { mockAISettings } from './ai-mock';
-
-// In-memory store for AI settings (will be replaced with Firebase)
-let aiSettingsStore: AISettings = { ...mockAISettings };
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/client-config';
 
 export const aiService = {
   /**
-   * Get current AI settings
+   * Get current AI settings from Firestore
    */
   async getAISettings(): Promise<AIServiceResponse<AISettings>> {
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
+      const docRef = doc(db, 'ai_settings', 'global');
+      const docSnap = await getDoc(docRef);
       
-      return { 
-        success: true, 
-        data: { ...aiSettingsStore } 
-      };
+      if (docSnap.exists()) {
+        return { 
+          success: true, 
+          data: docSnap.data() as AISettings 
+        };
+      } else {
+        // Initialize with mock settings if document doesn't exist
+        const initialSettings = {
+          ...mockAISettings,
+          lastUpdated: serverTimestamp(),
+          updatedBy: 'system'
+        };
+        
+        await setDoc(docRef, initialSettings);
+        return { 
+          success: true, 
+          data: initialSettings as AISettings 
+        };
+      }
     } catch (error) {
       return { 
         success: false, 
@@ -26,19 +40,29 @@ export const aiService = {
   },
 
   /**
-   * Update AI settings
+   * Update AI settings in Firestore
    */
-  async updateAISettings(settings: Partial<AISettings>): Promise<AIServiceResponse<AISettings>> {
+  async updateAISettings(settings: Partial<AISettings>, updatedBy?: string): Promise<AIServiceResponse<AISettings>> {
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const docRef = doc(db, 'ai_settings', 'global');
       
-      // Update settings in store
-      aiSettingsStore = { ...aiSettingsStore, ...settings };
+      // Get current settings first
+      const currentDoc = await getDoc(docRef);
+      const currentSettings = currentDoc.exists() ? currentDoc.data() as AISettings : mockAISettings;
+      
+      // Update with new settings
+      const updatedSettings = {
+        ...currentSettings,
+        ...settings,
+        lastUpdated: serverTimestamp(),
+        updatedBy: updatedBy || 'unknown'
+      };
+      
+      await setDoc(docRef, updatedSettings);
       
       return { 
         success: true, 
-        data: { ...aiSettingsStore } 
+        data: updatedSettings as AISettings 
       };
     } catch (error) {
       return { 
