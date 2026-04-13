@@ -5,24 +5,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Bot, Send, MessageSquare, User, AlertCircle } from 'lucide-react';
 
 export default function AIChatPage() {
   const [question, setQuestion] = useState('');
+  const [questionType, setQuestionType] = useState('library');
   const [answer, setAnswer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [blockedReason, setBlockedReason] = useState<string | null>(null);
 
   const handleSendQuestion = async () => {
     if (!question.trim()) return;
 
     setIsLoading(true);
     setError(null);
+    setBlockedReason(null);
     setAnswer('');
 
     try {
-      // Call aiGatewayV1 Cloud Function
+      // Call aiGatewayV1 Cloud Function with V1 contract
       const response = await fetch('https://us-central1-edu-mate-admin.cloudfunctions.net/aiGatewayV1', {
         method: 'POST',
         headers: {
@@ -30,20 +34,25 @@ export default function AIChatPage() {
         },
         body: JSON.stringify({
           data: {
-            userId: 'admin_user', // Mock admin user
-            role: 'admin', // Mock admin role
-            questionType: 'general',
-            question: question.trim()
+            question: question.trim(),
+            questionType: questionType
           }
         })
       });
 
       const result = await response.json();
 
-      if (result.result && result.result.status === 'success') {
-        setAnswer(result.result.data.answer);
+      if (result.success === true && result.status === 'fallback') {
+        // Success response from V1
+        setAnswer(result.answer);
+      } else if (result.success === false && result.status === 'blocked') {
+        // Blocked response from V1
+        setBlockedReason(result.blockedReason);
+      } else if (result.success === false && result.status === 'error') {
+        // Error response from V1
+        setError(result.errorMessage);
       } else {
-        setError(result.result?.message || 'Failed to get AI response');
+        setError('Unexpected response format');
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -80,6 +89,23 @@ export default function AIChatPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Question Type Selector */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Question Type</label>
+            <Select value={questionType} onValueChange={setQuestionType} disabled={isLoading}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select question type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="schedule">Schedule</SelectItem>
+                <SelectItem value="department">Department</SelectItem>
+                <SelectItem value="course">Course</SelectItem>
+                <SelectItem value="library">Library</SelectItem>
+                <SelectItem value="announcement">Announcement</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Question Input */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Your Question</label>
@@ -119,6 +145,14 @@ export default function AIChatPage() {
             </div>
           )}
 
+          {/* Blocked Display */}
+          {blockedReason && (
+            <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-orange-600" />
+              <span className="text-sm text-orange-700">Blocked: {blockedReason}</span>
+            </div>
+          )}
+
           {/* Answer Display */}
           {answer && (
             <div className="space-y-2">
@@ -129,7 +163,7 @@ export default function AIChatPage() {
                   <div className="flex-1">
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{answer}</p>
                     <div className="mt-2 text-xs text-blue-600">
-                      Response from aiGatewayV1
+                      Response from aiGatewayV1 (Fallback)
                     </div>
                   </div>
                 </div>
