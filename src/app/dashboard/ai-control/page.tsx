@@ -74,14 +74,8 @@ function AIControlContent() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">AI Bot Control</h1>
           <p className="text-muted-foreground">
-            Configure and manage the AI assistant behavior and responses
+            Configure and manage AI assistant behavior and responses
           </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline">
-            <Settings className="h-4 w-4 mr-2" />
-            Advanced Settings
-          </Button>
         </div>
       </div>
 
