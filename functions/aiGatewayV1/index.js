@@ -41,13 +41,13 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
     // Temporary V1 dashboard fallback:
     // allow requests even when no Firebase Auth context is present yet.
     const authResult = {
-      valid: true,
-      userId: context.auth?.uid || "dashboard_dev_user",
-      role: context.auth?.token?.role || "admin",
-      message: context.auth
-        ? "Auth extracted from context (V1)"
-        : "No auth context provided - using temporary dashboard fallback",
-    };
+  valid: true,
+  userId: context.auth?.uid || "dashboard_dev_user",
+  role: context.auth?.token?.role || "admin",
+  message: context.auth
+    ? "Auth extracted from context (V1)"
+    : "No auth context provided - using temporary dashboard fallback",
+};
 
     const aiSettingsDoc = await db.collection("ai_settings").doc("global").get();
     if (!aiSettingsDoc.exists) {
