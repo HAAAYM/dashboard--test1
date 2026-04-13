@@ -27,7 +27,8 @@ export default function AIChatPage() {
 
     try {
       // Call aiGatewayV1 Cloud Function with V1 contract
-      const response = await fetch('https://us-central1-edu-mate-admin.cloudfunctions.net/aiGatewayV1', {
+      const aiGatewayUrl = process.env.NEXT_PUBLIC_AI_GATEWAY_URL || 'https://us-central1-edu-mate12.cloudfunctions.net/aiGatewayV1';
+      const response = await fetch(aiGatewayUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
