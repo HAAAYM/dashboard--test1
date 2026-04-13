@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Bot, Send, MessageSquare, User, AlertCircle } from 'lucide-react';
+import { httpsCallable, getFunctions } from 'firebase/functions';
 
 export default function AIChatPage() {
   const [question, setQuestion] = useState('');
@@ -26,32 +27,32 @@ export default function AIChatPage() {
     setAnswer('');
 
     try {
-      // Call aiGatewayV1 Cloud Function with V1 contract
-      const aiGatewayUrl = process.env.NEXT_PUBLIC_AI_GATEWAY_URL || 'https://us-central1-edu-mate12.cloudfunctions.net/aiGatewayV1';
-      const response = await fetch(aiGatewayUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: {
-            question: question.trim(),
-            questionType: questionType
-          }
-        })
+      // Call aiGatewayV1 Cloud Function with Firebase Functions SDK
+      const functions = getFunctions();
+      const aiGatewayCallable = httpsCallable(functions, 'aiGatewayV1');
+      
+      const result = await aiGatewayCallable({
+        question: question.trim(),
+        questionType: questionType
       });
 
-      const result = await response.json();
+      const response = result.data as {
+        success: boolean;
+        status: string;
+        answer?: string;
+        blockedReason?: string;
+        errorMessage?: string;
+      };
 
-      if (result.success === true && result.status === 'fallback') {
+      if (response.success === true && response.status === 'fallback') {
         // Success response from V1
-        setAnswer(result.answer);
-      } else if (result.success === false && result.status === 'blocked') {
+        setAnswer(response.answer || '');
+      } else if (response.success === false && response.status === 'blocked') {
         // Blocked response from V1
-        setBlockedReason(result.blockedReason);
-      } else if (result.success === false && result.status === 'error') {
+        setBlockedReason(response.blockedReason || null);
+      } else if (response.success === false && response.status === 'error') {
         // Error response from V1
-        setError(result.errorMessage);
+        setError(response.errorMessage || null);
       } else {
         setError('Unexpected response format');
       }
