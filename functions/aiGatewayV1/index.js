@@ -34,6 +34,12 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
     });
 
     const validationResult = validateInput(data);
+    logger.info(`Input validation completed: ${requestId}`, {
+      requestId,
+      valid: validationResult.valid,
+      error: validationResult.error || null,
+    });
+    
     if (!validationResult.valid) {
       return createErrorResponse(validationResult.error, requestId, startTime);
     }
@@ -49,13 +55,29 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
     : "No auth context provided - using temporary dashboard fallback",
 };
 
+    logger.info(`Auth result prepared: ${requestId}`, {
+      requestId,
+      userId: authResult.userId,
+      role: authResult.role,
+    });
+
+    logger.info(`Loading AI settings: ${requestId}`, {
+      requestId,
+    });
+    
     const aiSettingsDoc = await db.collection("ai_settings").doc("global").get();
+    logger.info(`AI settings document fetched: ${requestId}`, {
+      requestId,
+      exists: aiSettingsDoc.exists,
+    });
+    
     if (!aiSettingsDoc.exists) {
       return createErrorResponse("AI settings not found", requestId, startTime);
     }
 
     const aiSettings = aiSettingsDoc.data();
     logger.info(`AI Settings loaded: ${requestId}`, {
+      requestId,
       status: aiSettings.status,
       enabledTopics: aiSettings.allowedTopics?.length || 0,
     });
@@ -64,35 +86,89 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
       return createBlockedResponse("AI is currently disabled", requestId, startTime);
     }
 
+    logger.info(`Starting topic filtering: ${requestId}`, {
+      requestId,
+      blockedTopicsCount: aiSettings.blockedTopics?.length || 0,
+    });
+    
     const topicFilterResult = filterTopics(data.question, aiSettings.blockedTopics || []);
+    logger.info(`Topic filtering completed: ${requestId}`, {
+      requestId,
+      allowed: topicFilterResult.allowed,
+      reason: topicFilterResult.reason || null,
+    });
+    
     if (!topicFilterResult.allowed) {
       return createBlockedResponse(topicFilterResult.reason, requestId, startTime);
     }
 
+    logger.info(`Starting rate limit check: ${requestId}`, {
+      requestId,
+      userId: authResult.userId,
+      role: authResult.role,
+    });
+    
     const rateLimitResult = checkRateLimit(
       authResult.userId,
       authResult.role,
       aiSettings.rateLimits || {}
     );
+    logger.info(`Rate limit check completed: ${requestId}`, {
+      requestId,
+      allowed: rateLimitResult.allowed,
+      limit: rateLimitResult.limit,
+    });
+    
     if (!rateLimitResult.allowed) {
       return createBlockedResponse("Rate limit exceeded", requestId, startTime);
     }
 
-    const fallbackResponse = generateFallbackResponse(data.questionType, data.question);
-
-    await logUsage({
+    logger.info(`Generating fallback response: ${requestId}`, {
       requestId,
-      userId: authResult.userId,
-      userRole: authResult.role,
       questionType: data.questionType,
-      question: data.question,
-      timestamp: new Date().toISOString(),
-      responseTimeMs: Date.now() - startTime,
-      source: "fallback",
+    });
+    
+    const fallbackResponse = generateFallbackResponse(data.questionType, data.question);
+    logger.info(`Fallback response generated: ${requestId}`, {
+      requestId,
+      answerLength: fallbackResponse.answer?.length || 0,
+    });
+
+    logger.info(`Starting usage logging: ${requestId}`, {
+      requestId,
+    });
+    
+    try {
+      await logUsage({
+        requestId,
+        userId: authResult.userId,
+        userRole: authResult.role,
+        questionType: data.questionType,
+        question: data.question,
+        timestamp: new Date().toISOString(),
+        responseTimeMs: Date.now() - startTime,
+        source: "fallback",
+        success: true,
+        confidence: 0.0,
+        dataAccessed: [],
+        errorMessage: null,
+      });
+      
+      logger.info(`Usage logging completed: ${requestId}`, {
+        requestId,
+      });
+    } catch (logError) {
+      logger.error(`Usage logging failed but continuing: ${requestId}`, {
+        requestId,
+        error: logError.message,
+      });
+      // Continue with response even if logging fails
+    }
+
+    logger.info(`Preparing final response: ${requestId}`, {
+      requestId,
       success: true,
-      confidence: 0.0,
-      dataAccessed: [],
-      errorMessage: null,
+      status: "fallback",
     });
 
     return {
