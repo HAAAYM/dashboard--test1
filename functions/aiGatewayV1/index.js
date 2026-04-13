@@ -139,31 +139,26 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
     });
     
     try {
-      await logUsage({
-        requestId,
-        userId: authResult.userId,
-        userRole: authResult.role,
-        questionType: data.questionType,
-        question: data.question,
-        timestamp: new Date().toISOString(),
-        responseTimeMs: Date.now() - startTime,
-        source: "fallback",
-        success: true,
-        confidence: 0.0,
-        dataAccessed: [],
-        errorMessage: null,
-      });
-      
-      logger.info(`Usage logging completed: ${requestId}`, {
-        requestId,
-      });
-    } catch (logError) {
-      logger.error(`Usage logging failed but continuing: ${requestId}`, {
-        requestId,
-        error: logError.message,
-      });
-      // Continue with response even if logging fails
-    }
+  await logUsage({
+    requestId,
+    userId: authResult.userId,
+    userRole: authResult.role,
+    questionType: data.questionType,
+    question: data.question,
+    timestamp: new Date().toISOString(),
+    responseTimeMs: Date.now() - startTime,
+    source: "fallback",
+    success: true,
+    confidence: 0.0,
+    dataAccessed: [],
+    errorMessage: null,
+  });
+} catch (logError) {
+  logger.error(`Usage logging failed but continuing: ${requestId}`, {
+    requestId,
+    error: logError.message,
+  });
+}
 
     logger.info(`Preparing final response: ${requestId}`, {
       requestId,
