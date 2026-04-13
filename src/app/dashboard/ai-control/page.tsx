@@ -142,8 +142,8 @@ function AIControlContent() {
               <label className="text-sm font-medium">Response Delay (ms)</label>
               <Input 
                 type="number" 
-                value={settings.responseDelayMs}
-                onChange={(e) => handleFieldChange('responseDelayMs', parseInt(e.target.value))}
+                value={isNaN(settings.responseDelayMs) ? 1000 : settings.responseDelayMs}
+                onChange={(e) => handleFieldChange('responseDelayMs', parseInt(e.target.value) || 0)}
                 min="0" 
                 max="10000"
                 disabled={isSaving}
@@ -154,8 +154,8 @@ function AIControlContent() {
               <label className="text-sm font-medium">Max Response Length</label>
               <Input 
                 type="number" 
-                value={settings.maxResponseLength}
-                onChange={(e) => handleFieldChange('maxResponseLength', parseInt(e.target.value))}
+                value={isNaN(settings.maxResponseLength) ? 500 : settings.maxResponseLength}
+                onChange={(e) => handleFieldChange('maxResponseLength', parseInt(e.target.value) || 1)}
                 min="1" 
                 max="10000"
                 disabled={isSaving}
@@ -166,8 +166,8 @@ function AIControlContent() {
               <label className="text-sm font-medium">Confidence Threshold</label>
               <Input 
                 type="number" 
-                value={settings.confidenceThreshold}
-                onChange={(e) => handleFieldChange('confidenceThreshold', parseFloat(e.target.value))}
+                value={isNaN(settings.confidenceThreshold) ? 0.7 : settings.confidenceThreshold}
+                onChange={(e) => handleFieldChange('confidenceThreshold', parseFloat(e.target.value) || 0)}
                 min="0" 
                 max="1" 
                 step="0.1"
