@@ -34,4 +34,4 @@ export const getFirebase = () => {
   return firebaseInstances;
 };
 
-export const { auth, db, storage } = getFirebase();
+export const { app, auth, db, storage } = getFirebase();

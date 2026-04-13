@@ -9,16 +9,16 @@ const db = getFirestore();
 
 /**
  * AI Gateway V1 - Skeleton Implementation
- * 
+ *
  * Purpose: Test basic AI Gateway flow without Gemini integration
  * Features: Auth validation, role checking, AI status, topic filtering, rate limiting, fallback responses
- * 
+ *
  * V1 Limitations:
  * - No Gemini API integration
  * - No academic data fetching
  * - Mock responses only
  * - Basic rate limiting (in-memory)
- * 
+ *
  * Next Steps (V2): Add Gemini integration
  * Next Steps (V3): Add academic data fetching
  */
@@ -38,19 +38,15 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
       return createErrorResponse(validationResult.error, requestId, startTime);
     }
 
-    if (!context.auth) {
-      return createErrorResponse(
-        "Unauthenticated request - no auth context provided",
-        requestId,
-        startTime
-      );
-    }
-
+    // Temporary V1 dashboard fallback:
+    // allow requests even when no Firebase Auth context is present yet.
     const authResult = {
       valid: true,
-      userId: context.auth.uid,
-      role: context.auth.token?.role || "student",
-      message: "Auth extracted from context (V1 mock)",
+      userId: context.auth?.uid || "dashboard_dev_user",
+      role: context.auth?.token?.role || "admin",
+      message: context.auth
+        ? "Auth extracted from context (V1)"
+        : "No auth context provided - using temporary dashboard fallback",
     };
 
     const aiSettingsDoc = await db.collection("ai_settings").doc("global").get();
@@ -220,7 +216,7 @@ function createBlockedResponse(reason, requestId, startTime) {
     source: "fallback",
     requestId,
     timestamp: new Date().toISOString(),
-   responseTimeMs: Date.now() - startTime
+    responseTimeMs: Date.now() - startTime,
   };
 }
 
@@ -232,7 +228,7 @@ function createErrorResponse(errorMessage, requestId, startTime) {
     source: "fallback",
     requestId,
     timestamp: new Date().toISOString(),
-    responseTimeMs: Date.now() - startTime
+    responseTimeMs: Date.now() - startTime,
   };
 }
 

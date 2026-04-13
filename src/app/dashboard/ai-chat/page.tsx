@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Bot, Send, MessageSquare, User, AlertCircle } from 'lucide-react';
 import { httpsCallable, getFunctions } from 'firebase/functions';
+import { app } from '@/lib/firebase/client-config';
 
 export default function AIChatPage() {
   const [question, setQuestion] = useState('');
@@ -28,7 +29,7 @@ export default function AIChatPage() {
 
     try {
       // Call aiGatewayV1 Cloud Function with Firebase Functions SDK
-      const functions = getFunctions();
+      const functions = getFunctions(app);
       const aiGatewayCallable = httpsCallable(functions, 'aiGatewayV1');
       
       const result = await aiGatewayCallable({
