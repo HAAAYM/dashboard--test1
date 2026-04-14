@@ -1,18 +1,14 @@
-
 const functions = require("firebase-functions");
 const { logger } = functions;
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-
 // Initialize Firebase Admin
 initializeApp();
 const db = getFirestore();
 
-exports.aiGatewayV1 = functions
-  .runWith({ secrets: ["GEMINI_API_KEY"] })
-  .https.onCall(async (data, context) => {
+exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
   const startTime = Date.now();
   const requestId = generateRequestId();
 
@@ -20,7 +16,7 @@ exports.aiGatewayV1 = functions
     logger.info(`AI Gateway V1 - Request received: ${requestId}`, {
       requestId,
       dataType: typeof data,
-      dataKeys: data ? Object.keys(data) : [],
+      dataKeys: data && typeof data === "object" ? Object.keys(data) : [],
     });
 
     // Support both:
@@ -31,7 +27,8 @@ exports.aiGatewayV1 = functions
     logger.info(`Actual data extracted: ${requestId}`, {
       requestId,
       actualDataType: typeof actualData,
-      actualDataKeys: Object.keys(actualData),
+      actualDataKeys:
+        actualData && typeof actualData === "object" ? Object.keys(actualData) : [],
     });
 
     const validationResult = validateInput(actualData);
@@ -82,7 +79,6 @@ exports.aiGatewayV1 = functions
 
     logger.info(`Starting Gemini attempt: ${requestId}`, {
       requestId,
-      hasGeminiKey: !!geminiApiKey.value(),
       aiSettingsStatus: aiSettings.status,
     });
 
@@ -109,7 +105,7 @@ exports.aiGatewayV1 = functions
         finalAnswer = geminiAnswer.trim();
         finalSource = "gemini";
         finalConfidence = Number(aiSettings.confidenceThreshold ?? 0.8);
-        
+
         logger.info(`Gemini successful: ${requestId}`, {
           requestId,
           finalAnswerLength: finalAnswer.length,
@@ -149,7 +145,6 @@ exports.aiGatewayV1 = functions
       finalConfidence,
     });
 
-    // Logging should never break the main response
     try {
       await logUsage({
         requestId,
@@ -198,7 +193,7 @@ exports.aiGatewayV1 = functions
 });
 
 async function generateGeminiResponse({ question, questionType, aiSettings }) {
- const apiKey = "AIzaSyDq0pZDDQx9IQUXjQitWkMq1cjZEHbVpMM";
+  const apiKey = "ضع_مفتاح_جمناي_هنا_مؤقتا";
 
   if (!apiKey) {
     throw new Error("Missing GEMINI_API_KEY");
@@ -243,7 +238,13 @@ function validateInput(data) {
   const required = ["question", "questionType"];
 
   for (const field of required) {
-    if (!data[field]) {
+    if (
+      !data ||
+      typeof data !== "object" ||
+      data[field] === undefined ||
+      data[field] === null ||
+      data[field] === ""
+    ) {
       return {
         valid: false,
         error: `Missing required field: ${field}`,

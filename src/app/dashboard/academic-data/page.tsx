@@ -97,13 +97,13 @@ export default function AcademicDataPage() {
   const getValidationBadge = (status: string) => {
     switch (status) {
       case 'valid':
-        return <Badge className="bg-green-900 text-green-100 border-green-800">Valid</Badge>;
+        return <Badge className="bg-muted/30 text-green-400 border-green-600/30">Valid</Badge>;
       case 'missing-field':
-        return <Badge className="bg-yellow-900 text-yellow-100 border-yellow-800">Missing Field</Badge>;
+        return <Badge className="bg-muted/30 text-yellow-400 border-yellow-600/30">Missing Field</Badge>;
       case 'duplicate':
-        return <Badge className="bg-red-900 text-red-100 border-red-800">Duplicate</Badge>;
+        return <Badge className="bg-muted/30 text-red-400 border-red-600/30">Duplicate</Badge>;
       default:
-        return <Badge className="bg-gray-800 text-gray-100 border-gray-700">Unknown</Badge>;
+        return <Badge className="bg-muted/30 text-muted-foreground border-muted/50">Unknown</Badge>;
     }
   };
 
@@ -456,21 +456,21 @@ export default function AcademicDataPage() {
                   placeholder="Search records..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
+                  className="pl-8 bg-background border-border"
                 />
               </div>
             </div>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 bg-muted/50 border-muted-200 hover:bg-muted/70">
               <Filter className="h-4 w-4" />
               Filter
             </Button>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border-border">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-muted">
+                  <tr className="border-b border-border bg-muted/50">
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Academic ID
                     </th>
@@ -494,9 +494,9 @@ export default function AcademicDataPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-background divide-y divide-border">
+                <tbody className="bg-card divide-y divide-border">
                   {filteredData.map((item, index) => (
-                    <tr key={index} className="hover:bg-muted/50">
+                    <tr key={index} className="hover:bg-muted/20">
                       <td className="px-4 py-3 text-sm text-foreground">{item.academicId}</td>
                       <td className="px-4 py-3 text-sm text-foreground">{item.fullName}</td>
                       <td className="px-4 py-3 text-sm text-foreground">{item.cardId}</td>
@@ -525,19 +525,19 @@ export default function AcademicDataPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="text-center p-4 bg-card border rounded-lg">
+            <div className="text-center p-4 bg-card border-border rounded-lg">
               <div className="text-2xl font-bold text-foreground">150</div>
               <p className="text-sm text-muted-foreground">Total Rows</p>
             </div>
-            <div className="text-center p-4 bg-card border rounded-lg">
+            <div className="text-center p-4 bg-card border-border rounded-lg">
               <div className="text-2xl font-bold text-green-400">142</div>
               <p className="text-sm text-muted-foreground">Valid Records</p>
             </div>
-            <div className="text-center p-4 bg-card border rounded-lg">
+            <div className="text-center p-4 bg-card border-border rounded-lg">
               <div className="text-2xl font-bold text-yellow-400">5</div>
               <p className="text-sm text-muted-foreground">Missing Fields</p>
             </div>
-            <div className="text-center p-4 bg-card border rounded-lg">
+            <div className="text-center p-4 bg-card border-border rounded-lg">
               <div className="text-2xl font-bold text-red-400">3</div>
               <p className="text-sm text-muted-foreground">Duplicates</p>
             </div>
