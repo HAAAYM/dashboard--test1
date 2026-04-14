@@ -139,7 +139,7 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
 });
 
 async function generateGeminiResponse({ question, questionType, aiSettings, requestId }) {
-  const apiKey = "AIzaSyDmNyM_iG_vllHD66d_BdQu0pc6mgorkPA";
+  const apiKey = "AIzaSyBgQKiWDJT_FmyM4OQ1V7qqi8Rc72EVg4c";
 
   if (!apiKey) {
     throw new Error("Missing GEMINI_API_KEY");

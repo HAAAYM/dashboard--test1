@@ -136,6 +136,7 @@ export default function AcademicDataPage() {
   const [fileData, setFileData] = useState<any[]>([]);
   const [specializationsData, setSpecializationsData] = useState<any[]>([]);
   const [isLoadingSpecializations, setIsLoadingSpecializations] = useState(true);
+  const [allProcessedRecords, setAllProcessedRecords] = useState<any[]>([]);
 
   // Fetch specializations from Firestore
   useEffect(() => {
@@ -174,16 +175,144 @@ export default function AcademicDataPage() {
     }
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      // Simulate file parsing to get columns
-      const mockColumns = ['Column A', 'Column B', 'Column C', 'Column D', 'Column E', 'Column F', 'Column G', 'Column H', 'Column I', 'Column J'];
-      setFileColumns(mockColumns);
-      // Generate mock preview data
-      setMockPreviewData(generateMockData());
+      
+      // Read actual file content to extract column headers
+      try {
+        const fileContent = await readFileContent(file);
+        setFileData(fileContent);
+        
+        // Extract column names from first row (header)
+        if (fileContent.length > 0) {
+          const columns = Object.keys(fileContent[0]);
+          setFileColumns(columns);
+          // Initialize preview with empty mappings (will be updated when user selects mappings)
+          setMockPreviewData([]);
+        }
+      } catch (error) {
+        console.error('Error reading file:', error);
+        // Fallback to mock data
+        const mockColumns = ['Column A', 'Column B', 'Column C', 'Column D', 'Column E', 'Column F', 'Column G', 'Column H', 'Column I', 'Column J'];
+        setFileColumns(mockColumns);
+        setMockPreviewData(generateMockData());
+      }
     }
+  };
+
+  const readFileContent = async (file: File): Promise<any[]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const text = e.target?.result as string;
+          const lines = text.split('\n').filter(line => line.trim());
+          
+          if (lines.length < 2) {
+            reject(new Error('File must have at least 2 rows (header + data)'));
+            return;
+          }
+          
+          // Detect delimiter by analyzing the first few lines
+          const detectDelimiter = (lines: string[]): string => {
+            const sampleLines = lines.slice(0, Math.min(3, lines.length));
+            const delimiters = [',', ';', '\t'];
+            const delimiterCounts: Record<string, number> = { ',': 0, ';': 0, '\t': 0 };
+            
+            for (const line of sampleLines) {
+              // Count delimiters outside quotes
+              let inQuotes = false;
+              for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                  inQuotes = !inQuotes;
+                } else if (!inQuotes && delimiters.includes(char)) {
+                  delimiterCounts[char]++;
+                }
+              }
+            }
+            
+            // Find the delimiter with the highest count
+            let maxCount = 0;
+            let detectedDelimiter = ','; // Default to comma
+            
+            for (const [delimiter, count] of Object.entries(delimiterCounts)) {
+              if (count > maxCount) {
+                maxCount = count;
+                detectedDelimiter = delimiter;
+              }
+            }
+            
+            return detectedDelimiter;
+          };
+          
+          const delimiter = detectDelimiter(lines);
+          
+          // Improved CSV parsing to handle quotes, detected delimiter, and Arabic text
+          const parseCSVLine = (line: string, delimiter: string): string[] => {
+            const result: string[] = [];
+            let current = '';
+            let inQuotes = false;
+            let i = 0;
+            
+            while (i < line.length) {
+              const char = line[i];
+              
+              if (char === '"') {
+                if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                  // Escaped quote
+                  current += '"';
+                  i += 2;
+                } else {
+                  // Toggle quote mode
+                  inQuotes = !inQuotes;
+                  i++;
+                }
+              } else if (char === delimiter && !inQuotes) {
+                // Field separator
+                result.push(current.trim());
+                current = '';
+                i++;
+              } else {
+                // Regular character
+                current += char;
+                i++;
+              }
+            }
+            
+            // Add the last field
+            result.push(current.trim());
+            return result;
+          };
+          
+          // Parse headers
+          const headers = parseCSVLine(lines[0], delimiter);
+          const data = [];
+          
+          // Parse data rows
+          for (let i = 1; i < lines.length; i++) {
+            const values = parseCSVLine(lines[i], delimiter);
+            const row: any = {};
+            
+            headers.forEach((header, index) => {
+              row[header] = values[index] || '';
+            });
+            
+            data.push(row);
+          }
+          
+          resolve(data);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsText(file, 'UTF-8'); // Explicitly set encoding for Arabic text
+    });
   };
 
   const handleRemoveFile = () => {
@@ -206,6 +335,41 @@ export default function AcademicDataPage() {
 
   const handleColumnMapping = (field: string, column: string) => {
     setColumnMappings(prev => ({ ...prev, [field]: column }));
+    // Update preview data when mapping changes
+    if (fileData.length > 0) {
+      updatePreviewData({ ...columnMappings, [field]: column });
+    }
+  };
+
+  const updatePreviewData = (mappings: Record<string, string>) => {
+    // Process all file data for statistics
+    const allRecords = fileData.map((row, index) => {
+      const record: any = {
+        id: index + 1,
+        academicId: row[mappings.academicId] || '',
+        fullName: row[mappings.fullName] || '',
+        cardId: row[mappings.cardId] || '',
+        college: colleges.find(c => c.id === college)?.name || '',
+        specialization: specializationsData.find(s => s.id === specialization)?.name || '',
+        batch: batch || '2023'
+      };
+
+      // Validate required fields
+      if (!record.academicId || !record.cardId || !record.fullName) {
+        record.validationStatus = 'missing-field';
+      } else {
+        record.validationStatus = 'valid';
+      }
+
+      return record;
+    });
+
+    // Store all processed records for statistics
+    setAllProcessedRecords(allRecords);
+    
+    // Show only first 15 for preview display
+    const previewRecords = allRecords.slice(0, 15);
+    setMockPreviewData(previewRecords);
   };
 
   const getFilteredDepartments = () => {
@@ -254,27 +418,8 @@ export default function AcademicDataPage() {
   };
 
   const processFileData = () => {
-    const processedRecords = [];
-    
-    for (const row of fileData) {
-      const record: any = {
-        recordType,
-        academicId: row[columnMappings.academicId]?.trim(),
-        cardId: row[columnMappings.cardId]?.trim(),
-        fullName: row[columnMappings.fullName]?.trim()
-      };
-
-      // Validate required fields
-      if (!record.academicId || !record.cardId || !record.fullName) {
-        record.validationStatus = 'missing-field';
-      } else {
-        record.validationStatus = 'valid';
-      }
-
-      processedRecords.push(record);
-    }
-
-    return processedRecords;
+    // Use the already processed all records for statistics
+    return allProcessedRecords;
   };
 
   const handleImportRecords = async () => {
@@ -669,7 +814,7 @@ export default function AcademicDataPage() {
                 <SelectContent>
                   {fileColumns.map((col, index) => (
                     <SelectItem key={col} value={col}>
-                      {col}: {t('academicData.columnMapping.academicId')}
+                      {col}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -685,7 +830,7 @@ export default function AcademicDataPage() {
                 <SelectContent>
                   {fileColumns.map((col, index) => (
                     <SelectItem key={col} value={col}>
-                      {col}: {t('academicData.columnMapping.cardId')}
+                      {col}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -701,7 +846,7 @@ export default function AcademicDataPage() {
                 <SelectContent>
                   {fileColumns.map((col, index) => (
                     <SelectItem key={col} value={col}>
-                      {col}: {t('academicData.columnMapping.fullName')}
+                      {col}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -710,37 +855,48 @@ export default function AcademicDataPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('academicData.columnMapping.level')}</label>
-              <Select>
+              <Select value={columnMappings.level || ''} onValueChange={(value) => handleColumnMapping('level', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder={t('academicData.columnMapping.selectColumn')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="column7">{t('academicData.columnMapping.columnG')}: {t('academicData.columnMapping.level')}</SelectItem>
-                  <SelectItem value="column8">{t('academicData.columnMapping.columnH')}: {t('academicData.columnMapping.year')}</SelectItem>
+                  {fileColumns.map((col, index) => (
+                    <SelectItem key={col} value={col}>
+                      {col}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('academicData.columnMapping.semester')}</label>
-              <Select>
+              <Select value={columnMappings.semester || ''} onValueChange={(value) => handleColumnMapping('semester', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder={t('academicData.columnMapping.selectColumn')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="column9">{t('academicData.columnMapping.columnI')}: {t('academicData.columnMapping.semester')}</SelectItem>
+                  {fileColumns.map((col, index) => (
+                    <SelectItem key={col} value={col}>
+                      {col}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('academicData.columnMapping.group')}</label>
-              <Select>
+              <Select value={columnMappings.group || ''} onValueChange={(value) => handleColumnMapping('group', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder={t('academicData.columnMapping.selectColumn')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="column10">{t('academicData.columnMapping.columnJ')}: {t('academicData.columnMapping.group')}</SelectItem>
+                  {fileColumns.map((col, index) => (
+                    <SelectItem key={col} value={col}>
+                      {col}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -757,6 +913,21 @@ export default function AcademicDataPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {allProcessedRecords.length > 0 && (
+            <div className="mb-4 p-3 bg-muted/30 border border-muted/200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Showing {mockPreviewData.length} of {allProcessedRecords.length} parsed rows
+                </span>
+                {allProcessedRecords.length > 15 && (
+                  <Button variant="ghost" size="sm" className="text-xs">
+                    Show more
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+          
           <div className="flex items-center gap-4 mb-4">
             <div className="flex-1">
               <div className="relative">
