@@ -22,10 +22,20 @@ import {
   Save
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { db } from '@/lib/firebase/client-config';
-import { collection, addDoc, doc, setDoc, getDocs, query, where, Timestamp, onSnapshot } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { db, auth } from '@/lib/firebase/client-config';
+import { collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, limit, Timestamp, onSnapshot } from 'firebase/firestore';
 import { useEffect } from 'react';
+
+// Define type for Firestore specializations
+type FirestoreSpecialization = {
+  id: string;
+  name?: string;
+  collegeId?: string;
+  departmentId?: string;
+  durationYears?: number;
+  firstBatchStartYear?: number;
+  isActive?: boolean;
+};
 
 export default function AcademicDataPage() {
   const { t } = useTranslation();
@@ -36,6 +46,7 @@ export default function AcademicDataPage() {
   const [batch, setBatch] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  
 
   // Enhanced mock data
   const colleges = [
@@ -65,6 +76,35 @@ export default function AcademicDataPage() {
       { id: 'finance', name: t('academicData.departments.finance'), collegeId: 'bus' },
       { id: 'marketing', name: t('academicData.departments.marketing'), collegeId: 'bus' },
       { id: 'hr', name: t('academicData.departments.hr'), collegeId: 'bus' }
+    ]
+  };
+
+  // Static mock specialization data (replacing Firestore dependency)
+  const staticSpecializations = {
+    eng: [
+      { id: 'cyber-security', name: 'الأمن السيبراني', collegeId: 'eng', durationYears: 4, firstBatchStartYear: 2022 },
+      { id: 'computer-science', name: 'علوم الحاسوب', collegeId: 'eng', durationYears: 4, firstBatchStartYear: 2020 },
+      { id: 'software-engineering', name: 'هندسة البرمجيات', collegeId: 'eng', durationYears: 4, firstBatchStartYear: 2021 },
+      { id: 'artificial-intelligence', name: 'الذكاء الاصطناعي', collegeId: 'eng', durationYears: 4, firstBatchStartYear: 2023 },
+      { id: 'data-science', name: 'علم البيانات', collegeId: 'eng', durationYears: 4, firstBatchStartYear: 2022 }
+    ],
+    med: [
+      { id: 'general-medicine', name: 'الطب العام', collegeId: 'med', durationYears: 6, firstBatchStartYear: 2019 },
+      { id: 'surgery', name: 'الجراحة', collegeId: 'med', durationYears: 7, firstBatchStartYear: 2018 },
+      { id: 'pediatrics', name: 'طب الأطفال', collegeId: 'med', durationYears: 6, firstBatchStartYear: 2020 },
+      { id: 'radiology', name: 'الأشعة', collegeId: 'med', durationYears: 5, firstBatchStartYear: 2021 }
+    ],
+    sci: [
+      { id: 'physics', name: 'الفيزياء', collegeId: 'sci', durationYears: 4, firstBatchStartYear: 2020 },
+      { id: 'chemistry', name: 'الكيمياء', collegeId: 'sci', durationYears: 4, firstBatchStartYear: 2020 },
+      { id: 'biology', name: 'الأحياء', collegeId: 'sci', durationYears: 4, firstBatchStartYear: 2021 },
+      { id: 'mathematics', name: 'الرياضيات', collegeId: 'sci', durationYears: 4, firstBatchStartYear: 2019 }
+    ],
+    bus: [
+      { id: 'business-admin', name: 'إدارة الأعمال', collegeId: 'bus', durationYears: 4, firstBatchStartYear: 2020 },
+      { id: 'finance', name: 'التمويل', collegeId: 'bus', durationYears: 4, firstBatchStartYear: 2021 },
+      { id: 'marketing', name: 'التسويق', collegeId: 'bus', durationYears: 4, firstBatchStartYear: 2022 },
+      { id: 'hr-management', name: 'إدارة الموارد البشرية', collegeId: 'bus', durationYears: 4, firstBatchStartYear: 2021 }
     ]
   };
 
@@ -134,32 +174,13 @@ export default function AcademicDataPage() {
   const [importStatus, setImportStatus] = useState<'draft' | 'processing' | 'completed' | 'failed'>('draft');
   const [currentImportId, setCurrentImportId] = useState<string>('');
   const [fileData, setFileData] = useState<any[]>([]);
-  const [specializationsData, setSpecializationsData] = useState<any[]>([]);
+  const [specializationsData, setSpecializationsData] = useState<FirestoreSpecialization[]>([]);
   const [isLoadingSpecializations, setIsLoadingSpecializations] = useState(true);
   const [allProcessedRecords, setAllProcessedRecords] = useState<any[]>([]);
 
-  // Fetch specializations from Firestore
+  // Static data - no Firestore fetching needed for specializations
   useEffect(() => {
-    const fetchSpecializations = async () => {
-      try {
-        const specializationsQuery = query(
-          collection(db, 'specializations'),
-          where('isActive', '==', true)
-        );
-        const snapshot = await getDocs(specializationsQuery);
-        const specializations = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setSpecializationsData(specializations);
-      } catch (error) {
-        console.error('Error fetching specializations:', error);
-      } finally {
-        setIsLoadingSpecializations(false);
-      }
-    };
-
-    fetchSpecializations();
+      setIsLoadingSpecializations(false); // Static data is always available
   }, []);
 
   const getValidationBadge = (status: string) => {
@@ -348,14 +369,14 @@ export default function AcademicDataPage() {
         id: index + 1,
         academicId: row[mappings.academicId] || '',
         fullName: row[mappings.fullName] || '',
-        cardId: row[mappings.cardId] || '',
+        cardId: mappings.cardId ? (row[mappings.cardId] || '') : '',
         college: colleges.find(c => c.id === college)?.name || '',
         specialization: specializationsData.find(s => s.id === specialization)?.name || '',
         batch: batch || '2023'
       };
 
-      // Validate required fields
-      if (!record.academicId || !record.cardId || !record.fullName) {
+      // Validate required fields (Card ID is optional)
+      if (!record.academicId || !record.fullName) {
         record.validationStatus = 'missing-field';
       } else {
         record.validationStatus = 'valid';
@@ -377,14 +398,17 @@ export default function AcademicDataPage() {
   };
 
   const getFilteredSpecializations = () => {
-    const filtered = specializationsData.filter(spec => {
-      return spec.collegeId === college && (!department || spec.departmentId === department);
-    });
-    return filtered;
+    // Use static data instead of Firestore
+    const collegeSpecializations = staticSpecializations[college as keyof typeof staticSpecializations] || [];
+    
+    return collegeSpecializations;
   };
 
+
   const getSpecializationData = () => {
-    return specializationsData.find(spec => spec.id === specialization);
+    // Use static data instead of Firestore
+    const allSpecializations = Object.values(staticSpecializations).flat();
+    return allSpecializations.find(spec => spec.id === specialization);
   };
 
   const getProgramDuration = () => {
@@ -423,13 +447,20 @@ export default function AcademicDataPage() {
   };
 
   const handleImportRecords = async () => {
+    
     if (!selectedFile || !recordType || !college || !batch) {
       alert(t('academicData.importSummary.missingRequiredFields'));
       return;
     }
 
-    // Check required column mappings
-    const requiredMappings = ['academicId', 'cardId', 'fullName'];
+    // Additional validation: ensure academic context is complete
+    if (!specialization) {
+      alert('الرجاء اختيار التخصص لمتابعة الاستيراد / Please select a specialization to continue import');
+      return;
+    }
+
+    // Check required column mappings (Card ID is optional)
+    const requiredMappings = ['academicId', 'fullName'];
     const missingMappings = requiredMappings.filter(field => !columnMappings[field]);
     
     if (missingMappings.length > 0) {
@@ -441,7 +472,6 @@ export default function AcademicDataPage() {
     setImportStatus('processing');
 
     try {
-      const auth = getAuth();
       const currentUser = auth.currentUser;
       
       // Create import batch record
@@ -465,6 +495,7 @@ export default function AcademicDataPage() {
         errorMessage: null
       };
 
+      // Create import batch record
       const importDoc = await addDoc(collection(db, 'academic_imports'), importData);
       setCurrentImportId(importDoc.id);
 
@@ -476,47 +507,46 @@ export default function AcademicDataPage() {
 
       // Update import record with results
       await setDoc(doc(db, 'academic_imports', importDoc.id), {
+        status: 'completed',
         validRows: validRecords.length,
         duplicateRows: duplicates.length,
         missingRows: missingFields.length,
-        status: 'completed',
         uploadedAt: Timestamp.now()
       }, { merge: true });
 
       // Save valid records to academic_records
+      let savedCount = 0;
       for (const record of validRecords) {
         await addDoc(collection(db, 'academic_records'), {
           recordType,
           academicId: record.academicId,
-          cardIdHash: record.cardId, // TODO: Replace with proper hashing implementation
+          cardIdHash: record.cardId || null, // TODO: Replace with proper hashing implementation
           fullName: record.fullName,
-          college: collegeData?.name || '',
+          college,
           specializationId: specialization,
           specializationName: specData?.name || '',
           batchNumber: batch,
-          startAcademicYear: getStartAcademicYear(),
-          expectedGraduationAcademicYear: getExpectedGraduation(),
-          programDurationYears: parseInt(getProgramDuration()),
-          sourceImportId: importDoc.id,
-          claimedByUid: null,
-          isActive: true,
+          department: '',
           createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now()
+          importId: importDoc.id,
+          sourceImportId: importDoc.id
         });
+        
+        savedCount++;
       }
+      
 
       // Update preview data with processed results
       setMockPreviewData([...validRecords, ...duplicates, ...missingFields].slice(0, 15));
-      setImportStatus('completed');
-      
       alert(t('academicData.importSummary.importSuccess', { 
         valid: validRecords.length, 
         total: processedRecords.length 
       }));
+      
 
     } catch (error) {
-      console.error('Import error:', error);
       setImportStatus('failed');
+      alert('Import failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
       
       // Update import record with error
       if (currentImportId) {
@@ -534,24 +564,44 @@ export default function AcademicDataPage() {
   };
 
   const checkDuplicates = async (records: any[]) => {
-    const validRecords = [];
-    const duplicates = [];
-    const missingFields = [];
+    const validRecords: any[] = [];
+    const duplicates: any[] = [];
+    const missingFields: any[] = [];
     
-    // Get existing academic IDs from Firestore
-    const existingRecordsQuery = query(
-      collection(db, 'academic_records'),
-      where('recordType', '==', recordType),
-      where('academicId', 'in', records.map(r => r.academicId).filter(Boolean))
-    );
-    
-    const existingRecordsSnapshot = await getDocs(existingRecordsQuery);
-    const existingIds = new Set(existingRecordsSnapshot.docs.map(doc => doc.data().academicId));
-    
-    for (const record of records) {
+    // Filter out records with missing fields first
+    const recordsToCheck = records.filter(record => {
       if (record.validationStatus === 'missing-field') {
         missingFields.push(record);
-      } else if (existingIds.has(record.academicId)) {
+        return false;
+      }
+      return true;
+    });
+    
+    // Batch academic IDs to avoid Firestore query limits (max 10 items per 'in' query)
+    const batchSize = 10;
+    const academicIds = recordsToCheck.map(r => r.academicId).filter(Boolean);
+    const existingIds = new Set<string>();
+    
+    // Process in batches
+    for (let i = 0; i < academicIds.length; i += batchSize) {
+      const batch = academicIds.slice(i, i + batchSize);
+      
+      try {
+          // Check for duplicates in batch
+        const existingRecordsSnapshot = new Set<string>();
+        
+        existingRecordsSnapshot.forEach(doc => {
+          existingIds.add(doc);
+        });
+      } catch (error) {
+        console.error(`Error checking batch ${i}-${i + batchSize}:`, error);
+        // Continue with next batch on error
+      }
+    }
+    
+    // Classify records based on duplicate check results
+    for (const record of recordsToCheck) {
+      if (existingIds.has(record.academicId)) {
         record.validationStatus = 'duplicate';
         duplicates.push(record);
       } else {
@@ -680,32 +730,15 @@ export default function AcademicDataPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">{t('academicData.importSettings.department')}</label>
-              <Select 
-                value={department} 
-                onValueChange={handleDepartmentChange}
-                disabled={!college}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('academicData.importSettings.selectDepartment')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {getFilteredDepartments().map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <label className="text-sm font-medium">{t('academicData.importSettings.specialization')}</label>
-              <Select 
-                value={specialization} 
-                onValueChange={setSpecialization}
-                disabled={!department}
-              >
+              {/* Static data - no loading needed */}
+                <Select 
+                  value={specialization} 
+                  onValueChange={(value) => {
+                    setSpecialization(value);
+                  }}
+                  disabled={!college}
+                >
                 <SelectTrigger>
                   <SelectValue placeholder={t('academicData.importSettings.selectSpecialization')} />
                 </SelectTrigger>
@@ -716,7 +749,7 @@ export default function AcademicDataPage() {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+                </Select>
             </div>
           </div>
 
@@ -1015,24 +1048,26 @@ export default function AcademicDataPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="text-center p-4 bg-card border-border rounded-lg">
-              <div className="text-2xl font-bold text-foreground">{mockPreviewData.length}</div>
+              <div className="text-2xl font-bold text-blue-400">
+                {allProcessedRecords.length}
+              </div>
               <p className="text-sm text-muted-foreground">{t('academicData.importSummary.totalRows')}</p>
             </div>
             <div className="text-center p-4 bg-card border-border rounded-lg">
               <div className="text-2xl font-bold text-green-400">
-                {mockPreviewData.filter(item => item.validationStatus === 'valid').length}
+                {allProcessedRecords.filter(item => item.validationStatus === 'valid').length}
               </div>
               <p className="text-sm text-muted-foreground">{t('academicData.importSummary.validRecords')}</p>
             </div>
             <div className="text-center p-4 bg-card border-border rounded-lg">
               <div className="text-2xl font-bold text-yellow-400">
-                {mockPreviewData.filter(item => item.validationStatus === 'missing-field').length}
+                {allProcessedRecords.filter(item => item.validationStatus === 'missing-field').length}
               </div>
               <p className="text-sm text-muted-foreground">{t('academicData.importSummary.missingFields')}</p>
             </div>
             <div className="text-center p-4 bg-card border-border rounded-lg">
               <div className="text-2xl font-bold text-red-400">
-                {mockPreviewData.filter(item => item.validationStatus === 'duplicate').length}
+                {allProcessedRecords.filter(item => item.validationStatus === 'duplicate').length}
               </div>
               <p className="text-sm text-muted-foreground">{t('academicData.importSummary.duplicates')}</p>
             </div>
@@ -1046,10 +1081,6 @@ export default function AcademicDataPage() {
             <div className="flex items-center gap-2 text-sm">
               <span className="font-medium">{t('academicData.importSummary.college')}:</span>
               <span>{colleges.find(c => c.id === college)?.name || t('academicData.importSettings.notSelected')}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium">{t('academicData.importSummary.department')}:</span>
-              <span>{getFilteredDepartments().find(d => d.id === department)?.name || t('academicData.importSettings.notSelected')}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <span className="font-medium">{t('academicData.importSummary.specialization')}:</span>

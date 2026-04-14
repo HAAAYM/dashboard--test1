@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Allow read/write for specializations collection (authenticated users)
+    match /specializations/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // Allow read/write for academic_imports collection (authenticated users)
+    match /academic_imports/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Allow read/write for academic_records collection (authenticated users)
+    match /academic_records/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Allow read/write for users collection (authenticated users)
+    match /users/{userId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // For development - allow all access (comment out for production)
+    // match /{document=**} {
+    //   allow read, write: if true;
+    // }
+  }
+}

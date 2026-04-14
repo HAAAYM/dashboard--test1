@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,8 +40,42 @@ import {
   ChevronRight,
   Send
 } from 'lucide-react';
+import { db } from '@/lib/firebase/client-config';
+import { doc, getDoc, updateDoc, collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 
-// Local types for this page only
+// Firestore user type
+type FirestoreUserProfile = {
+  id: string;
+  uid: string;
+  fullName: string;
+  email: string;
+  username?: string;
+  phone?: string;
+  profileImage?: string;
+  role: string;
+  college?: string;
+  specializationName?: string;
+  academicId?: string;
+  batchNumber?: string;
+  status: string;
+  verificationStatus: string;
+  isStudentVerified: boolean;
+  isDoctorVerified: boolean;
+  createdAt: Timestamp;
+  lastLoginAt?: Timestamp;
+  updatedAt?: Timestamp;
+  suspendedAt?: Timestamp;
+  bannedAt?: Timestamp;
+  // Activity statistics (mock for now, can be fetched from other collections later)
+  posts?: number;
+  comments?: number;
+  likes?: number;
+  warnings?: number;
+  reports?: number;
+};
+
+// Activity types for rich profile
 interface UserGroup {
   id: number;
   name: string;
@@ -68,138 +102,32 @@ interface UserActivity {
   details: string;
 }
 
-interface UserData {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  avatar: string;
-  role: string;
-  college: string;
-  department: string;
-  major: string;
-  year: string;
-  studentId: string;
-  status: string;
-  verified: boolean;
-  joinDate: string;
-  lastLogin: string;
-  accountAge: string;
-  posts: number;
-  comments: number;
-  likes: number;
-  warnings: number;
-  reports: number;
-  groups: UserGroup[];
-  warningHistory: UserWarning[];
-  activities: UserActivity[];
-}
-
-// Mock user data - in real app this would come from API
-const mockUserData = {
-  id: 1,
-  name: 'Ahmed Mohammed',
-  email: 'ahmed.mohammed@student.edu',
-  phone: '+966 50 123 4567',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ahmed',
-  role: 'student',
-  college: 'Engineering',
-  department: 'Computer Science',
-  major: 'Software Engineering',
-  year: '3rd Year',
-  studentId: 'CS2021001',
-  status: 'active',
-  verified: true,
-  joinDate: '2024-01-10',
-  lastLogin: '2024-01-15 14:30',
-  accountAge: '5 days',
-  posts: 45,
-  comments: 128,
-  likes: 234,
-  warnings: 2,
-  reports: 1,
-  groups: [
-    {
-      id: 1,
-      name: 'Computer Science Students',
-      type: 'department',
-      members: 245,
-      role: 'member',
-      joinedAt: '2024-01-10'
-    },
-    {
-      id: 2,
-      name: 'Programming Club',
-      type: 'club',
-      members: 89,
-      role: 'moderator',
-      joinedAt: '2024-01-12'
-    },
-    {
-      id: 3,
-      name: 'Study Group - Data Structures',
-      type: 'study',
-      members: 12,
-      role: 'admin',
-      joinedAt: '2024-01-11'
-    },
-    {
-      id: 4,
-      name: 'University Gaming Community',
-      type: 'social',
-      members: 156,
-      role: 'member',
-      joinedAt: '2024-01-13'
-    }
-  ],
-  warningHistory: [
-    {
-      id: 1,
-      type: 'inappropriate_content',
-      description: 'Posted inappropriate language in group discussion',
-      date: '2024-01-14',
-      severity: 'medium',
-      status: 'active'
-    },
-    {
-      id: 2,
-      type: 'spam_behavior',
-      description: 'Multiple similar posts in short time period',
-      date: '2024-01-13',
-      severity: 'low',
-      status: 'resolved'
-    }
-  ],
-  activities: [
-    {
-      id: 1,
-      type: 'post_created',
-      description: 'Created a new post in Computer Science Students group',
-      date: '2024-01-15 13:45',
-      details: 'Asked about final exam preparation tips'
-    },
-    {
-      id: 2,
-      type: 'comment_added',
-      description: 'Commented on study materials',
-      date: '2024-01-15 11:20',
-      details: 'Provided helpful resources for algorithms'
-    },
-    {
-      id: 3,
-      type: 'group_joined',
-      description: 'Joined University Gaming Community',
-      date: '2024-01-13 16:30',
-      details: 'Became a member of the group'
-    }
-  ]
-};
-
 export default function UserProfilePage() {
   const params = useParams();
   const userId = params.id as string;
-  const [user, setUser] = useState<UserData>(mockUserData as UserData);
+  const [user, setUser] = useState<FirestoreUserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [messageDialogOpen, setMessageDialogOpen] = useState<boolean>(false);
+  const [activityData, setActivityData] = useState<{
+    posts: number;
+    comments: number;
+    likes: number;
+    warnings: number;
+    reports: number;
+    groups: UserGroup[];
+    warningsHistory: UserWarning[];
+    activities: UserActivity[];
+  }>({
+    posts: 0,
+    comments: 0,
+    likes: 0,
+    warnings: 0,
+    reports: 0,
+    groups: [] as UserGroup[],
+    warningsHistory: [] as UserWarning[],
+    activities: [] as UserActivity[]
+  });
+  const [activityLoading, setActivityLoading] = useState(true);
   const [messageData, setMessageData] = useState<{
     title: string;
     message: string;
@@ -211,6 +139,215 @@ export default function UserProfilePage() {
     type: 'notification',
     priority: 'medium'
   });
+
+  // Helper functions (moved before usage)
+  const formatDate = (timestamp: Timestamp | undefined) => {
+    if (!timestamp) return 'Never';
+    return timestamp.toDate().toLocaleDateString();
+  };
+
+  const formatDateTime = (timestamp: Timestamp | undefined) => {
+    if (!timestamp) return 'Never';
+    return timestamp.toDate().toLocaleString();
+  };
+
+  // Fetch user activity data from Firestore
+  useEffect(() => {
+    const fetchActivityData = async () => {
+      if (!user) return;
+      
+      console.log('🔍 USER PROFILE: Fetching activity data for user:', user.id);
+      setActivityLoading(true);
+      
+      try {
+        const activityData = {
+          posts: 0,
+          comments: 0,
+          likes: 0,
+          warnings: 0,
+          reports: 0,
+          groups: [] as UserGroup[],
+          warningsHistory: [] as UserWarning[],
+          activities: [] as UserActivity[]
+        };
+        
+        // Try to fetch posts count
+        try {
+          const postsQuery = query(
+            collection(db, 'posts'),
+            where('userId', '==', user.uid),
+            limit(100)
+          );
+          const postsSnapshot = await getDocs(postsQuery);
+          activityData.posts = postsSnapshot.docs.length;
+          console.log('🔍 USER PROFILE: Found', activityData.posts, 'posts for user');
+        } catch (error) {
+          console.log('🔍 USER PROFILE: Posts collection not found or error:', error);
+        }
+        
+        // Try to fetch comments count
+        try {
+          const commentsQuery = query(
+            collection(db, 'comments'),
+            where('userId', '==', user.uid),
+            limit(100)
+          );
+          const commentsSnapshot = await getDocs(commentsQuery);
+          activityData.comments = commentsSnapshot.docs.length;
+          console.log('🔍 USER PROFILE: Found', activityData.comments, 'comments for user');
+        } catch (error) {
+          console.log('🔍 USER PROFILE: Comments collection not found or error:', error);
+        }
+        
+        // Try to fetch likes count
+        try {
+          const likesQuery = query(
+            collection(db, 'likes'),
+            where('userId', '==', user.uid),
+            limit(100)
+          );
+          const likesSnapshot = await getDocs(likesQuery);
+          activityData.likes = likesSnapshot.docs.length;
+          console.log('🔍 USER PROFILE: Found', activityData.likes, 'likes for user');
+        } catch (error) {
+          console.log('🔍 USER PROFILE: Likes collection not found or error:', error);
+        }
+        
+        // Try to fetch warnings count
+        try {
+          const warningsQuery = query(
+            collection(db, 'user_warnings'),
+            where('userId', '==', user.uid),
+            orderBy('createdAt', 'desc'),
+            limit(10)
+          );
+          const warningsSnapshot = await getDocs(warningsQuery);
+          activityData.warnings = warningsSnapshot.docs.length;
+          activityData.warningsHistory = warningsSnapshot.docs.map(doc => ({
+            id: parseInt(doc.id),
+            type: doc.data().type || 'warning',
+            description: doc.data().description || 'Warning issued',
+            date: formatDate(doc.data().createdAt || Timestamp.now()),
+            severity: doc.data().severity || 'medium',
+            status: doc.data().status || 'active'
+          }));
+          console.log('🔍 USER PROFILE: Found', activityData.warnings, 'warnings for user');
+        } catch (error) {
+          console.log('🔍 USER PROFILE: User warnings collection not found or error:', error);
+        }
+        
+        // Try to fetch groups membership
+        try {
+          const groupsQuery = query(
+            collection(db, 'user_groups'),
+            where('userId', '==', user.uid),
+            limit(10)
+          );
+          const groupsSnapshot = await getDocs(groupsQuery);
+          activityData.groups = groupsSnapshot.docs.map(doc => ({
+            id: parseInt(doc.id),
+            name: doc.data().groupName || 'Unknown Group',
+            type: doc.data().groupType || 'group',
+            members: doc.data().memberCount || 0,
+            role: doc.data().role || 'member',
+            joinedAt: formatDate(doc.data().joinedAt || Timestamp.now())
+          }));
+          console.log('🔍 USER PROFILE: Found', activityData.groups.length, 'groups for user');
+        } catch (error) {
+          console.log('🔍 USER PROFILE: User groups collection not found or error:', error);
+        }
+        
+        // Try to fetch recent activities
+        try {
+          const activitiesQuery = query(
+            collection(db, 'user_activities'),
+            where('userId', '==', user.uid),
+            orderBy('createdAt', 'desc'),
+            limit(10)
+          );
+          const activitiesSnapshot = await getDocs(activitiesQuery);
+          activityData.activities = activitiesSnapshot.docs.map(doc => ({
+            id: parseInt(doc.id),
+            type: doc.data().type || 'activity',
+            description: doc.data().description || 'User activity',
+            date: formatDateTime(doc.data().createdAt || Timestamp.now()),
+            details: doc.data().details || 'Activity details'
+          }));
+          console.log('🔍 USER PROFILE: Found', activityData.activities.length, 'activities for user');
+        } catch (error) {
+          console.log('🔍 USER PROFILE: User activities collection not found or error:', error);
+        }
+        
+        setActivityData(activityData);
+        console.log('✅ USER PROFILE: Activity data loaded for user:', user.id);
+        
+      } catch (error) {
+        console.error('❌ USER PROFILE: Error fetching activity data:', error);
+      } finally {
+        setActivityLoading(false);
+      }
+    };
+
+    fetchActivityData();
+  }, [user]);
+
+  // Fetch user data from Firestore
+  useEffect(() => {
+    const fetchUser = async () => {
+      console.log('🔍 USER PROFILE: Fetching user data for:', userId);
+      
+      try {
+        const userRef = doc(db, 'users', userId);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const userProfile: FirestoreUserProfile = {
+            id: userDoc.id,
+            uid: userData?.uid || '',
+            fullName: userData?.fullName || '',
+            email: userData?.email || '',
+            username: userData?.username,
+            phone: userData?.phone,
+            profileImage: userData?.profileImage,
+            role: userData?.role || 'student',
+            college: userData?.college,
+            specializationName: userData?.specializationName,
+            academicId: userData?.academicId,
+            batchNumber: userData?.batchNumber,
+            status: userData?.status || 'active',
+            verificationStatus: userData?.verificationStatus || 'pending',
+            isStudentVerified: userData?.isStudentVerified || false,
+            isDoctorVerified: userData?.isDoctorVerified || false,
+            createdAt: userData?.createdAt || Timestamp.now(),
+            lastLoginAt: userData?.lastLoginAt,
+            updatedAt: userData?.updatedAt,
+            suspendedAt: userData?.suspendedAt,
+            bannedAt: userData?.bannedAt,
+            // Activity statistics (will be fetched from other collections)
+            posts: activityData.posts,
+            comments: activityData.comments,
+            likes: activityData.likes,
+            warnings: activityData.warnings,
+            reports: activityData.reports
+          };
+          
+          console.log('✅ USER PROFILE: User data loaded:', userProfile);
+          setUser(userProfile);
+          
+        } else {
+          console.log('❌ USER PROFILE: User not found:', userId);
+        }
+        
+      } catch (error) {
+        console.error('❌ USER PROFILE: Error fetching user:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [userId]);
 
   const handleSendMessage = () => {
     setMessageDialogOpen(true);
@@ -233,15 +370,43 @@ export default function UserProfilePage() {
     alert('Message sent successfully!');
   };
 
-  const handleBanUser = () => {
-    if (confirm('Are you sure you want to ban this user?')) {
-      setUser((prev: UserData) => ({ ...prev, status: 'banned' }));
+  const handleBanUser = async () => {
+    if (!user || !confirm('Are you sure you want to ban this user? This action cannot be undone.')) return;
+    
+    try {
+      const userRef = doc(db, 'users', user.id);
+      await updateDoc(userRef, {
+        status: 'banned',
+        bannedAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+      
+      setUser(prev => prev ? { ...prev, status: 'banned' } : null);
+      console.log('✅ USER PROFILE: User banned successfully:', user.id);
+      
+    } catch (error) {
+      console.error('❌ USER PROFILE: Error banning user:', error);
+      alert('Failed to ban user: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
-  const handleSuspendUser = () => {
-    if (confirm('Are you sure you want to suspend this user?')) {
-      setUser((prev: UserData) => ({ ...prev, status: 'suspended' }));
+  const handleSuspendUser = async () => {
+    if (!user || !confirm('Are you sure you want to suspend this user?')) return;
+    
+    try {
+      const userRef = doc(db, 'users', user.id);
+      await updateDoc(userRef, {
+        status: 'suspended',
+        suspendedAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+      
+      setUser(prev => prev ? { ...prev, status: 'suspended' } : null);
+      console.log('✅ USER PROFILE: User suspended successfully:', user.id);
+      
+    } catch (error) {
+      console.error('❌ USER PROFILE: Error suspending user:', error);
+      alert('Failed to suspend user: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -251,6 +416,8 @@ export default function UserProfilePage() {
         return <Badge className="bg-blue-100 text-blue-800">Student</Badge>;
       case 'faculty':
         return <Badge className="bg-purple-100 text-purple-800">Faculty</Badge>;
+      case 'admin':
+        return <Badge className="bg-red-100 text-red-800">Admin</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
     }
@@ -267,6 +434,30 @@ export default function UserProfilePage() {
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
+  };
+
+  const getVerificationBadge = (user: FirestoreUserProfile) => {
+    if (user.isStudentVerified && user.isDoctorVerified) {
+      return <Badge className="bg-green-100 text-green-800">Fully Verified</Badge>;
+    } else if (user.isStudentVerified) {
+      return <Badge className="bg-blue-100 text-blue-800">Student Verified</Badge>;
+    } else if (user.isDoctorVerified) {
+      return <Badge className="bg-purple-100 text-purple-800">Doctor Verified</Badge>;
+    } else {
+      return <Badge variant="outline">Not Verified</Badge>;
+    }
+  };
+
+  const getAccountAge = (createdAt: Timestamp) => {
+    const now = new Date();
+    const created = createdAt.toDate();
+    const diffTime = Math.abs(now.getTime() - created.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return '1 day';
+    if (diffDays < 30) return `${diffDays} days`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months`;
+    return `${Math.floor(diffDays / 365)} years`;
   };
 
   const getGroupRoleBadge = (role: string) => {
@@ -294,6 +485,36 @@ export default function UserProfilePage() {
         return <Badge variant="outline">{severity}</Badge>;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="mt-4 text-muted-foreground">Loading user profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">User Not Found</h1>
+          <p className="text-muted-foreground mb-6">The user you're looking for doesn't exist or has been deleted.</p>
+          <Button 
+            variant="outline" 
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" />
+            Back to Users
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -327,7 +548,7 @@ export default function UserProfilePage() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <MessageSquare className="h-5 w-5" />
-                  Send Message to {user.name}
+                  Send Message to {user.fullName}
                 </DialogTitle>
                 <DialogDescription>
                   Send a message to this user. Choose the message type and priority.
@@ -425,20 +646,15 @@ export default function UserProfilePage() {
             {/* Avatar Section */}
             <div className="flex flex-col items-center space-y-4">
               <Avatar className="h-32 w-32">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage src={user.profileImage} alt={user.fullName} />
                 <AvatarFallback className="text-4xl">
-                  {user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                  {user.fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="text-center">
                 {getRoleBadge(user.role)}
                 {getStatusBadge(user.status)}
-                {user.verified && (
-                  <div className="flex items-center justify-center gap-1 mt-2">
-                    <Shield className="h-4 w-4 text-green-600" />
-                    <span className="text-sm text-green-600">Verified</span>
-                  </div>
-                )}
+                {getVerificationBadge(user)}
               </div>
             </div>
 
@@ -447,7 +663,7 @@ export default function UserProfilePage() {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Full Name</label>
-                  <p className="text-lg font-semibold">{user.name}</p>
+                  <p className="text-lg font-semibold">{user.fullName}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Email</label>
@@ -457,15 +673,22 @@ export default function UserProfilePage() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Phone</label>
+                  <label className="text-sm font-medium text-muted-foreground">Username</label>
                   <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <p>{user.phone}</p>
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <p>@{user.username || 'N/A'}</p>
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Student ID</label>
-                  <p className="font-mono">{user.studentId}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Phone</label>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <p>{user.phone || 'N/A'}</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Academic ID</label>
+                  <p className="font-mono">{user.academicId || 'N/A'}</p>
                 </div>
               </div>
               <div className="space-y-4">
@@ -473,34 +696,30 @@ export default function UserProfilePage() {
                   <label className="text-sm font-medium text-muted-foreground">College</label>
                   <div className="flex items-center gap-2">
                     <BookOpen className="h-4 w-4 text-muted-foreground" />
-                    <p>{user.college}</p>
+                    <p>{user.college || 'N/A'}</p>
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Department</label>
-                  <p>{user.department}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Specialization</label>
+                  <p>{user.specializationName || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Major</label>
-                  <p>{user.major}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Year/Position</label>
-                  <p>{user.year}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Batch</label>
+                  <p>{user.batchNumber || 'N/A'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Account Created</label>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <p>{user.joinDate}</p>
-                    <span className="text-sm text-muted-foreground">({user.accountAge} ago)</span>
+                    <p>{formatDate(user.createdAt)}</p>
+                    <span className="text-sm text-muted-foreground">({getAccountAge(user.createdAt)} ago)</span>
                   </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Last Login</label>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <p>{user.lastLogin}</p>
+                    <p>{formatDateTime(user.lastLoginAt)}</p>
                   </div>
                 </div>
               </div>
@@ -517,7 +736,7 @@ export default function UserProfilePage() {
             <Edit className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{user.posts}</div>
+            <div className="text-2xl font-bold">{activityLoading ? '...' : activityData.posts}</div>
             <p className="text-xs text-muted-foreground">Total posts created</p>
           </CardContent>
         </Card>
@@ -527,7 +746,7 @@ export default function UserProfilePage() {
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{user.comments}</div>
+            <div className="text-2xl font-bold">{activityLoading ? '...' : activityData.comments}</div>
             <p className="text-xs text-muted-foreground">Total comments</p>
           </CardContent>
         </Card>
@@ -537,7 +756,7 @@ export default function UserProfilePage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{user.likes}</div>
+            <div className="text-2xl font-bold">{activityLoading ? '...' : activityData.likes}</div>
             <p className="text-xs text-muted-foreground">Total likes received</p>
           </CardContent>
         </Card>
@@ -547,7 +766,7 @@ export default function UserProfilePage() {
             <AlertTriangle className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{user.warnings}</div>
+            <div className="text-2xl font-bold text-orange-600">{activityLoading ? '...' : activityData.warnings}</div>
             <p className="text-xs text-muted-foreground">Active warnings</p>
           </CardContent>
         </Card>
@@ -566,7 +785,17 @@ export default function UserProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {user.groups.map((group: UserGroup) => (
+            {activityLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading groups...</p>
+              </div>
+            ) : activityData.groups.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No groups found</p>
+              </div>
+            ) : (
+              activityData.groups.map((group: UserGroup) => (
               <div key={group.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center gap-4">
                   <div className="p-2 bg-primary/10 rounded-lg">
@@ -604,7 +833,17 @@ export default function UserProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {user.warningHistory.map((warning: UserWarning) => (
+            {activityLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading warnings...</p>
+              </div>
+            ) : activityData.warningsHistory.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No warnings found</p>
+              </div>
+            ) : (
+              activityData.warningsHistory.map((warning: UserWarning) => (
               <div key={warning.id} className="flex items-start gap-4 p-4 border rounded-lg">
                 <div className="p-2 bg-orange-100 rounded-lg">
                   <AlertTriangle className="h-5 w-5 text-orange-600" />
@@ -639,7 +878,17 @@ export default function UserProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {user.activities.map((activity: UserActivity) => (
+            {activityLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading activities...</p>
+              </div>
+            ) : activityData.activities.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No activities found</p>
+              </div>
+            ) : (
+              activityData.activities.map((activity: UserActivity) => (
               <div key={activity.id} className="flex items-start gap-4 p-4 border rounded-lg">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <Activity className="h-5 w-5 text-blue-600" />
