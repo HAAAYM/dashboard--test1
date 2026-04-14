@@ -162,6 +162,135 @@
       }
     }
   },
+  "academicData": {
+    "title": "البيانات الأكاديمية",
+    "description": "استيراد وتنظيم بيانات الجامعة للمصادقة والتخصيص الأكاديمي",
+    "importFile": "استيراد ملف",
+    "statistics": {
+      "totalRecords": "إجمالي السجلات الأكاديمية",
+      "activeImports": "الاستيرادات النشطة",
+      "studentRecords": "سجلات الطلاب",
+      "doctorRecords": "سجلات الأطباء",
+      "fromLastMonth": "+{{value}}% من الشهر الماضي",
+      "processingNow": "قيد المعالجة الآن"
+    },
+    "importSettings": {
+      "title": "إعدادات الاستيراد",
+      "description": "تكوين السياق الأكاديمي لاستيراد بياناتك",
+      "recordType": "نوع السجل",
+      "college": "الكلية",
+      "department": "القسم",
+      "specialization": "التخصص",
+      "batchNumber": "رقم الدفعة",
+      "programDuration": "مدة البرنامج",
+      "expectedGraduation": "التخرج المتوقع",
+      "selectType": "اختر النوع",
+      "selectCollege": "اختر الكلية",
+      "selectDepartment": "اختر القسم",
+      "selectSpecialization": "اختر التخصص",
+      "batchPlaceholder": "مثال: 2023",
+      "notSelected": "لم يتم الاختيار",
+      "fourYears": "4 سنوات",
+      "year2027": "2027"
+    },
+    "fileUpload": {
+      "title": "رفع ملف",
+      "description": "ارفع ملف بياناتك الأكاديمية. الحقول المطلوبة على الأقل: المعرف الأكاديمي، معرف البطاقة، الاسم الكامل",
+      "dragDropText": "اسحب وأفلت ملفك هنا، أو انقر للاستعراض",
+      "supportedFormats": "الصيغ المدعومة: .csv, .xlsx, .xls",
+      "chooseFile": "اختر ملف",
+      "fileSize": "{{size}} ميجابايت"
+    },
+    "columnMapping": {
+      "title": "ربط الأعمدة",
+      "description": "ربط أعمدة ملفك بالحقول الأكاديمية المطلوبة",
+      "academicId": "المعرف الأكاديمي",
+      "cardId": "معرف البطاقة",
+      "fullName": "الاسم الكامل",
+      "level": "المستوى",
+      "semester": "الفصل الدراسي",
+      "group": "المجموعة",
+      "nationality": "الجنسية",
+      "selectColumn": "اختر عمود",
+      "columnA": "العمود أ",
+      "columnB": "العمود ب",
+      "columnC": "العمود ج",
+      "columnD": "العمود د",
+      "columnE": "العمود هـ",
+      "columnF": "العمود و",
+      "columnG": "العمود ز",
+      "columnH": "العمود ح",
+      "columnI": "العمود ط",
+      "columnJ": "العمود ي",
+      "studentId": "معرف الطالب",
+      "cardNumber": "رقم البطاقة",
+      "idCard": "بطاقة الهوية",
+      "name": "الاسم",
+      "year": "السنة"
+    },
+    "dataPreview": {
+      "title": "معاينة البيانات",
+      "description": "مراجعة والتحقق من بياناتك المستوردة قبل النهائية",
+      "searchPlaceholder": "بحث في السجلات...",
+      "filter": "فلتر",
+      "headers": {
+        "academicId": "المعرف الأكاديمي",
+        "fullName": "الاسم الكامل",
+        "cardId": "معرف البطاقة",
+        "college": "الكلية",
+        "specialization": "التخصص",
+        "batch": "الدفعة",
+        "status": "الحالة"
+      }
+    },
+    "importSummary": {
+      "title": "ملخص الاستيراد",
+      "description": "مراجعة الملخص النهائي قبل إكمال عملية الاستيراد",
+      "totalRows": "إجمالي الصفوف",
+      "validRecords": "السجلات الصالحة",
+      "missingFields": "الحقول المفقودة",
+      "duplicates": "المكررات",
+      "recordType": "نوع السجل",
+      "college": "الكلية",
+      "department": "القسم",
+      "specialization": "التخصص",
+      "batch": "الدفعة",
+      "saveDraft": "حفظ مسودة",
+      "importRecords": "استيراد السجلات"
+    },
+    "recordTypes": {
+      "students": "الطلاب",
+      "doctors": "الأطباء",
+      "staff": "الموظفين"
+    },
+    "status": {
+      "valid": "صالح",
+      "missingField": "حقل مفقود",
+      "duplicate": "مكرر",
+      "unknown": "غير معروف"
+    },
+    "colleges": {
+      "eng": "كلية الهندسة",
+      "med": "كلية الطب",
+      "sci": "كلية العلوم",
+      "bus": "كلية الأعمال"
+    },
+    "departments": {
+      "cs": "علوم الحاسوب",
+      "ce": "الهندسة المدنية",
+      "ee": "الهندسة الكهربائية",
+      "surgery": "الجراحة",
+      "medicine": "الطب الباطني",
+      "pediatrics": "طب الأطفال"
+    },
+    "specializations": {
+      "ai": "الذكاء الاصطناعي",
+      "se": "هندسة البرمجيات",
+      "ds": "علم البيانات",
+      "structural": "الهندسة الإنشائية",
+      "transport": "هندسة النقل"
+    }
+  },
   "common": {
     "loading": "جاري التحميل...",
     "error": "خطأ",
@@ -186,6 +315,7 @@
     "uploadedBy": "تم الرفع بواسطة",
     "downloads": "التحميلات",
     "uploaded": "تم الرفع",
-    "actions": "الإجراءات"
+    "actions": "الإجراءات",
+    "dir": "rtl"
   }
 }

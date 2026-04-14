@@ -151,6 +151,135 @@
       }
     }
   },
+  "academicData": {
+    "title": "Academic Data",
+    "description": "Import and organize university data for authentication and academic customization",
+    "importFile": "Import File",
+    "statistics": {
+      "totalRecords": "Total Academic Records",
+      "activeImports": "Active Imports",
+      "studentRecords": "Student Records",
+      "doctorRecords": "Doctor Records",
+      "fromLastMonth": "+{{value}}% from last month",
+      "processingNow": "Processing now"
+    },
+    "importSettings": {
+      "title": "Import Settings",
+      "description": "Configure the academic context for your data import",
+      "recordType": "Record Type",
+      "college": "College",
+      "department": "Department",
+      "specialization": "Specialization",
+      "batchNumber": "Batch Number",
+      "programDuration": "Program Duration",
+      "expectedGraduation": "Expected Graduation",
+      "selectType": "Select type",
+      "selectCollege": "Select college",
+      "selectDepartment": "Select department",
+      "selectSpecialization": "Select specialization",
+      "batchPlaceholder": "e.g., 2023",
+      "notSelected": "Not selected",
+      "fourYears": "4 years",
+      "year2027": "2027"
+    },
+    "fileUpload": {
+      "title": "Upload File",
+      "description": "Upload your academic data file. Minimum required fields: Academic ID, Card ID, Full Name",
+      "dragDropText": "Drag and drop your file here, or click to browse",
+      "supportedFormats": "Supported formats: .csv, .xlsx, .xls",
+      "chooseFile": "Choose File",
+      "fileSize": "{{size}} MB"
+    },
+    "columnMapping": {
+      "title": "Column Mapping",
+      "description": "Map your file columns to the required academic fields",
+      "academicId": "Academic ID",
+      "cardId": "Card ID",
+      "fullName": "Full Name",
+      "level": "Level",
+      "semester": "Semester",
+      "group": "Group",
+      "nationality": "Nationality",
+      "selectColumn": "Select column",
+      "columnA": "Column A",
+      "columnB": "Column B",
+      "columnC": "Column C",
+      "columnD": "Column D",
+      "columnE": "Column E",
+      "columnF": "Column F",
+      "columnG": "Column G",
+      "columnH": "Column H",
+      "columnI": "Column I",
+      "columnJ": "Column J",
+      "studentId": "Student ID",
+      "cardNumber": "Card Number",
+      "idCard": "ID Card",
+      "name": "Name",
+      "year": "Year"
+    },
+    "dataPreview": {
+      "title": "Data Preview",
+      "description": "Review and validate your imported data before finalizing",
+      "searchPlaceholder": "Search records...",
+      "filter": "Filter",
+      "headers": {
+        "academicId": "Academic ID",
+        "fullName": "Full Name",
+        "cardId": "Card ID",
+        "college": "College",
+        "specialization": "Specialization",
+        "batch": "Batch",
+        "status": "Status"
+      }
+    },
+    "importSummary": {
+      "title": "Import Summary",
+      "description": "Review the final summary before completing the import process",
+      "totalRows": "Total Rows",
+      "validRecords": "Valid Records",
+      "missingFields": "Missing Fields",
+      "duplicates": "Duplicates",
+      "recordType": "Record Type",
+      "college": "College",
+      "department": "Department",
+      "specialization": "Specialization",
+      "batch": "Batch",
+      "saveDraft": "Save Draft",
+      "importRecords": "Import Records"
+    },
+    "recordTypes": {
+      "students": "Students",
+      "doctors": "Doctors",
+      "staff": "Staff"
+    },
+    "status": {
+      "valid": "Valid",
+      "missingField": "Missing Field",
+      "duplicate": "Duplicate",
+      "unknown": "Unknown"
+    },
+    "colleges": {
+      "eng": "College of Engineering",
+      "med": "College of Medicine",
+      "sci": "College of Science",
+      "bus": "College of Business"
+    },
+    "departments": {
+      "cs": "Computer Science",
+      "ce": "Civil Engineering",
+      "ee": "Electrical Engineering",
+      "surgery": "Surgery",
+      "medicine": "Internal Medicine",
+      "pediatrics": "Pediatrics"
+    },
+    "specializations": {
+      "ai": "Artificial Intelligence",
+      "se": "Software Engineering",
+      "ds": "Data Science",
+      "structural": "Structural Engineering",
+      "transport": "Transportation Engineering"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",
@@ -175,6 +304,7 @@
     "uploadedBy": "Uploaded By",
     "downloads": "Downloads",
     "uploaded": "Uploaded",
-    "actions": "Actions"
+    "actions": "Actions",
+    "dir": "ltr"
   }
 }

@@ -21,8 +21,10 @@ import {
   Download,
   Save
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function AcademicDataPage() {
+  const { t } = useTranslation();
   const [recordType, setRecordType] = useState('');
   const [college, setCollege] = useState('');
   const [department, setDepartment] = useState('');
@@ -33,34 +35,34 @@ export default function AcademicDataPage() {
 
   // Mock data
   const colleges = [
-    { id: 'eng', name: 'College of Engineering' },
-    { id: 'med', name: 'College of Medicine' },
-    { id: 'sci', name: 'College of Science' },
-    { id: 'bus', name: 'College of Business' }
+    { id: 'eng', name: t('academicData.colleges.eng') },
+    { id: 'med', name: t('academicData.colleges.med') },
+    { id: 'sci', name: t('academicData.colleges.sci') },
+    { id: 'bus', name: t('academicData.colleges.bus') }
   ];
 
   const departments = {
     eng: [
-      { id: 'cs', name: 'Computer Science' },
-      { id: 'ce', name: 'Civil Engineering' },
-      { id: 'ee', name: 'Electrical Engineering' }
+      { id: 'cs', name: t('academicData.departments.cs') },
+      { id: 'ce', name: t('academicData.departments.ce') },
+      { id: 'ee', name: t('academicData.departments.ee') }
     ],
     med: [
-      { id: 'surgery', name: 'Surgery' },
-      { id: 'medicine', name: 'Internal Medicine' },
-      { id: 'pediatrics', name: 'Pediatrics' }
+      { id: 'surgery', name: t('academicData.departments.surgery') },
+      { id: 'medicine', name: t('academicData.departments.medicine') },
+      { id: 'pediatrics', name: t('academicData.departments.pediatrics') }
     ]
   };
 
   const specializations = {
     cs: [
-      { id: 'ai', name: 'Artificial Intelligence' },
-      { id: 'se', name: 'Software Engineering' },
-      { id: 'ds', name: 'Data Science' }
+      { id: 'ai', name: t('academicData.specializations.ai') },
+      { id: 'se', name: t('academicData.specializations.se') },
+      { id: 'ds', name: t('academicData.specializations.ds') }
     ],
     ce: [
-      { id: 'structural', name: 'Structural Engineering' },
-      { id: 'transport', name: 'Transportation Engineering' }
+      { id: 'structural', name: t('academicData.specializations.structural') },
+      { id: 'transport', name: t('academicData.specializations.transport') }
     ]
   };
 
@@ -97,13 +99,13 @@ export default function AcademicDataPage() {
   const getValidationBadge = (status: string) => {
     switch (status) {
       case 'valid':
-        return <Badge className="bg-muted/30 text-green-400 border-green-600/30">Valid</Badge>;
+        return <Badge className="bg-muted/30 text-green-400 border-green-600/30">{t('academicData.status.valid')}</Badge>;
       case 'missing-field':
-        return <Badge className="bg-muted/30 text-yellow-400 border-yellow-600/30">Missing Field</Badge>;
+        return <Badge className="bg-muted/30 text-yellow-400 border-yellow-600/30">{t('academicData.status.missingField')}</Badge>;
       case 'duplicate':
-        return <Badge className="bg-muted/30 text-red-400 border-red-600/30">Duplicate</Badge>;
+        return <Badge className="bg-muted/30 text-red-400 border-red-600/30">{t('academicData.status.duplicate')}</Badge>;
       default:
-        return <Badge className="bg-muted/30 text-muted-foreground border-muted/50">Unknown</Badge>;
+        return <Badge className="bg-muted/30 text-muted-foreground border-muted/50">{t('academicData.status.unknown')}</Badge>;
     }
   };
 
@@ -136,14 +138,23 @@ export default function AcademicDataPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Academic Data</h1>
+          <h1 className="text-2xl font-bold">{t('academicData.title')}</h1>
           <p className="text-muted-foreground">
-            Import and organize university data for authentication and academic customization
+            {t('academicData.description')}
           </p>
         </div>
         <Button className="gap-2">
-          <Upload className="h-4 w-4" />
-          Import File
+          {t('dir') === 'rtl' ? (
+            <>
+              {t('academicData.importFile')}
+              <Upload className="h-4 w-4" />
+            </>
+          ) : (
+            <>
+              <Upload className="h-4 w-4" />
+              {t('academicData.importFile')}
+            </>
+          )}
         </Button>
       </div>
 
@@ -151,45 +162,45 @@ export default function AcademicDataPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Academic Records</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('academicData.statistics.totalRecords')}</CardTitle>
             <Database className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">12,543</div>
-            <p className="text-xs text-muted-foreground">+2.1% from last month</p>
+            <p className="text-xs text-muted-foreground">{t('academicData.statistics.fromLastMonth', { value: '2.1' })}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Imports</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('academicData.statistics.activeImports')}</CardTitle>
             <Upload className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">Processing now</p>
+            <p className="text-xs text-muted-foreground">{t('academicData.statistics.processingNow')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Student Records</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('academicData.statistics.studentRecords')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">10,234</div>
-            <p className="text-xs text-muted-foreground">+1.8% from last month</p>
+            <p className="text-xs text-muted-foreground">{t('academicData.statistics.fromLastMonth', { value: '1.8' })}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Doctor Records</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('academicData.statistics.doctorRecords')}</CardTitle>
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">2,309</div>
-            <p className="text-xs text-muted-foreground">+0.5% from last month</p>
+            <p className="text-xs text-muted-foreground">{t('academicData.statistics.fromLastMonth', { value: '0.5' })}</p>
           </CardContent>
         </Card>
       </div>
@@ -197,32 +208,32 @@ export default function AcademicDataPage() {
       {/* Import Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>Import Settings</CardTitle>
+          <CardTitle>{t('academicData.importSettings.title')}</CardTitle>
           <CardDescription>
-            Configure the academic context for your data import
+            {t('academicData.importSettings.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Record Type</label>
+              <label className="text-sm font-medium">{t('academicData.importSettings.recordType')}</label>
               <Select value={recordType} onValueChange={setRecordType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t('academicData.importSettings.selectType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="students">Students</SelectItem>
-                  <SelectItem value="doctors">Doctors</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
+                  <SelectItem value="students">{t('academicData.recordTypes.students')}</SelectItem>
+                  <SelectItem value="doctors">{t('academicData.recordTypes.doctors')}</SelectItem>
+                  <SelectItem value="staff">{t('academicData.recordTypes.staff')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">College</label>
+              <label className="text-sm font-medium">{t('academicData.importSettings.college')}</label>
               <Select value={college} onValueChange={setCollege}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select college" />
+                  <SelectValue placeholder={t('academicData.importSettings.selectCollege')} />
                 </SelectTrigger>
                 <SelectContent>
                   {colleges.map((c) => (
@@ -235,14 +246,14 @@ export default function AcademicDataPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Department</label>
+              <label className="text-sm font-medium">{t('academicData.importSettings.department')}</label>
               <Select 
                 value={department} 
                 onValueChange={setDepartment}
                 disabled={!college}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select department" />
+                  <SelectValue placeholder={t('academicData.importSettings.selectDepartment')} />
                 </SelectTrigger>
                 <SelectContent>
                   {getFilteredDepartments().map((d) => (
@@ -255,14 +266,14 @@ export default function AcademicDataPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Specialization</label>
+              <label className="text-sm font-medium">{t('academicData.importSettings.specialization')}</label>
               <Select 
                 value={specialization} 
                 onValueChange={setSpecialization}
                 disabled={!department}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select specialization" />
+                  <SelectValue placeholder={t('academicData.importSettings.selectSpecialization')} />
                 </SelectTrigger>
                 <SelectContent>
                   {getFilteredSpecializations().map((s) => (
@@ -277,22 +288,22 @@ export default function AcademicDataPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Batch Number</label>
+              <label className="text-sm font-medium">{t('academicData.importSettings.batchNumber')}</label>
               <Input 
                 value={batch} 
                 onChange={(e) => setBatch(e.target.value)}
-                placeholder="e.g., 2023"
+                placeholder={t('academicData.importSettings.batchPlaceholder')}
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Program Duration</label>
-              <Input value="4 years" disabled />
+              <label className="text-sm font-medium">{t('academicData.importSettings.programDuration')}</label>
+              <Input value={t('academicData.importSettings.fourYears')} disabled />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Expected Graduation</label>
-              <Input value="2027" disabled />
+              <label className="text-sm font-medium">{t('academicData.importSettings.expectedGraduation')}</label>
+              <Input value={t('academicData.importSettings.year2027')} disabled />
             </div>
           </div>
         </CardContent>
@@ -301,9 +312,9 @@ export default function AcademicDataPage() {
       {/* File Upload */}
       <Card>
         <CardHeader>
-          <CardTitle>Upload File</CardTitle>
+          <CardTitle>{t('academicData.fileUpload.title')}</CardTitle>
           <CardDescription>
-            Upload your academic data file. Minimum required fields: Academic ID, Card ID, Full Name
+            {t('academicData.fileUpload.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -311,10 +322,10 @@ export default function AcademicDataPage() {
             <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Drag and drop your file here, or click to browse
+                {t('academicData.fileUpload.dragDropText')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Supported formats: .csv, .xlsx, .xls
+                {t('academicData.fileUpload.supportedFormats')}
               </p>
               <input
                 type="file"
@@ -325,7 +336,7 @@ export default function AcademicDataPage() {
               />
               <Button asChild variant="outline">
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  Choose File
+                  {t('academicData.fileUpload.chooseFile')}
                 </label>
               </Button>
             </div>
@@ -338,7 +349,7 @@ export default function AcademicDataPage() {
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground">{selectedFile.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                    ({t('academicData.fileUpload.fileSize', { size: (selectedFile.size / 1024 / 1024).toFixed(2) })})
                   </span>
                 </div>
                 <Button variant="ghost" size="sm" onClick={handleRemoveFile}>
@@ -353,85 +364,85 @@ export default function AcademicDataPage() {
       {/* Column Mapping */}
       <Card>
         <CardHeader>
-          <CardTitle>Column Mapping</CardTitle>
+          <CardTitle>{t('academicData.columnMapping.title')}</CardTitle>
           <CardDescription>
-            Map your file columns to the required academic fields
+            {t('academicData.columnMapping.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Academic ID *</label>
+              <label className="text-sm font-medium">{t('academicData.columnMapping.academicId')} *</label>
               <Select>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select column" />
+                  <SelectValue placeholder={t('academicData.columnMapping.selectColumn')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="column1">Column A: Student ID</SelectItem>
-                  <SelectItem value="column2">Column B: Academic ID</SelectItem>
+                  <SelectItem value="column1">{t('academicData.columnMapping.columnA')}: {t('academicData.columnMapping.studentId')}</SelectItem>
+                  <SelectItem value="column2">{t('academicData.columnMapping.columnB')}: {t('academicData.columnMapping.academicId')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Card ID *</label>
+              <label className="text-sm font-medium">{t('academicData.columnMapping.cardId')} *</label>
               <Select>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select column" />
+                  <SelectValue placeholder={t('academicData.columnMapping.selectColumn')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="column3">Column C: Card Number</SelectItem>
-                  <SelectItem value="column4">Column D: ID Card</SelectItem>
+                  <SelectItem value="column3">{t('academicData.columnMapping.columnC')}: {t('academicData.columnMapping.cardNumber')}</SelectItem>
+                  <SelectItem value="column4">{t('academicData.columnMapping.columnD')}: {t('academicData.columnMapping.idCard')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Full Name *</label>
+              <label className="text-sm font-medium">{t('academicData.columnMapping.fullName')} *</label>
               <Select>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select column" />
+                  <SelectValue placeholder={t('academicData.columnMapping.selectColumn')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="column5">Column E: Name</SelectItem>
-                  <SelectItem value="column6">Column F: Full Name</SelectItem>
+                  <SelectItem value="column5">{t('academicData.columnMapping.columnE')}: {t('academicData.columnMapping.name')}</SelectItem>
+                  <SelectItem value="column6">{t('academicData.columnMapping.columnF')}: {t('academicData.columnMapping.fullName')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Level</label>
+              <label className="text-sm font-medium">{t('academicData.columnMapping.level')}</label>
               <Select>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select column" />
+                  <SelectValue placeholder={t('academicData.columnMapping.selectColumn')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="column7">Column G: Level</SelectItem>
-                  <SelectItem value="column8">Column H: Year</SelectItem>
+                  <SelectItem value="column7">{t('academicData.columnMapping.columnG')}: {t('academicData.columnMapping.level')}</SelectItem>
+                  <SelectItem value="column8">{t('academicData.columnMapping.columnH')}: {t('academicData.columnMapping.year')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Semester</label>
+              <label className="text-sm font-medium">{t('academicData.columnMapping.semester')}</label>
               <Select>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select column" />
+                  <SelectValue placeholder={t('academicData.columnMapping.selectColumn')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="column9">Column I: Semester</SelectItem>
+                  <SelectItem value="column9">{t('academicData.columnMapping.columnI')}: {t('academicData.columnMapping.semester')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Group</label>
+              <label className="text-sm font-medium">{t('academicData.columnMapping.group')}</label>
               <Select>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select column" />
+                  <SelectValue placeholder={t('academicData.columnMapping.selectColumn')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="column10">Column J: Group</SelectItem>
+                  <SelectItem value="column10">{t('academicData.columnMapping.columnJ')}: {t('academicData.columnMapping.group')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -442,27 +453,36 @@ export default function AcademicDataPage() {
       {/* Data Preview Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Data Preview</CardTitle>
+          <CardTitle>{t('academicData.dataPreview.title')}</CardTitle>
           <CardDescription>
-            Review and validate your imported data before finalizing
+            {t('academicData.dataPreview.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className={`absolute top-2.5 h-4 w-4 text-muted-foreground ${t('dir') === 'rtl' ? 'right-2' : 'left-2'}`} />
                 <Input
-                  placeholder="Search records..."
+                  placeholder={t('academicData.dataPreview.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 bg-background border-border"
+                  className={`${t('dir') === 'rtl' ? 'pr-8' : 'pl-8'} bg-background border-border`}
                 />
               </div>
             </div>
             <Button variant="outline" className="gap-2 bg-muted/50 border-muted-200 hover:bg-muted/70">
-              <Filter className="h-4 w-4" />
-              Filter
+              {t('dir') === 'rtl' ? (
+                <>
+                  {t('academicData.dataPreview.filter')}
+                  <Filter className="h-4 w-4" />
+                </>
+              ) : (
+                <>
+                  <Filter className="h-4 w-4" />
+                  {t('academicData.dataPreview.filter')}
+                </>
+              )}
             </Button>
           </div>
 
@@ -471,39 +491,39 @@ export default function AcademicDataPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Academic ID
+                    <th className={`px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>
+                      {t('academicData.dataPreview.headers.academicId')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Full Name
+                    <th className={`px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>
+                      {t('academicData.dataPreview.headers.fullName')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Card ID
+                    <th className={`px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>
+                      {t('academicData.dataPreview.headers.cardId')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      College
+                    <th className={`px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>
+                      {t('academicData.dataPreview.headers.college')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Specialization
+                    <th className={`px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>
+                      {t('academicData.dataPreview.headers.specialization')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Batch
+                    <th className={`px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>
+                      {t('academicData.dataPreview.headers.batch')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Status
+                    <th className={`px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>
+                      {t('academicData.dataPreview.headers.status')}
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-card divide-y divide-border">
                   {filteredData.map((item, index) => (
                     <tr key={index} className="hover:bg-muted/20">
-                      <td className="px-4 py-3 text-sm text-foreground">{item.academicId}</td>
-                      <td className="px-4 py-3 text-sm text-foreground">{item.fullName}</td>
-                      <td className="px-4 py-3 text-sm text-foreground">{item.cardId}</td>
-                      <td className="px-4 py-3 text-sm text-foreground">{item.college}</td>
-                      <td className="px-4 py-3 text-sm text-foreground">{item.specialization}</td>
-                      <td className="px-4 py-3 text-sm text-foreground">{item.batch}</td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className={`px-4 py-3 text-sm text-foreground ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>{item.academicId}</td>
+                      <td className={`px-4 py-3 text-sm text-foreground ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>{item.fullName}</td>
+                      <td className={`px-4 py-3 text-sm text-foreground ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>{item.cardId}</td>
+                      <td className={`px-4 py-3 text-sm text-foreground ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>{item.college}</td>
+                      <td className={`px-4 py-3 text-sm text-foreground ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>{item.specialization}</td>
+                      <td className={`px-4 py-3 text-sm text-foreground ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>{item.batch}</td>
+                      <td className={`px-4 py-3 text-sm ${t('dir') === 'rtl' ? 'text-right' : 'text-left'}`}>
                         {getValidationBadge(item.validationStatus)}
                       </td>
                     </tr>
@@ -518,62 +538,80 @@ export default function AcademicDataPage() {
       {/* Import Summary */}
       <Card>
         <CardHeader>
-          <CardTitle>Import Summary</CardTitle>
+          <CardTitle>{t('academicData.importSummary.title')}</CardTitle>
           <CardDescription>
-            Review the final summary before completing the import process
+            {t('academicData.importSummary.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="text-center p-4 bg-card border-border rounded-lg">
               <div className="text-2xl font-bold text-foreground">150</div>
-              <p className="text-sm text-muted-foreground">Total Rows</p>
+              <p className="text-sm text-muted-foreground">{t('academicData.importSummary.totalRows')}</p>
             </div>
             <div className="text-center p-4 bg-card border-border rounded-lg">
               <div className="text-2xl font-bold text-green-400">142</div>
-              <p className="text-sm text-muted-foreground">Valid Records</p>
+              <p className="text-sm text-muted-foreground">{t('academicData.importSummary.validRecords')}</p>
             </div>
             <div className="text-center p-4 bg-card border-border rounded-lg">
               <div className="text-2xl font-bold text-yellow-400">5</div>
-              <p className="text-sm text-muted-foreground">Missing Fields</p>
+              <p className="text-sm text-muted-foreground">{t('academicData.importSummary.missingFields')}</p>
             </div>
             <div className="text-center p-4 bg-card border-border rounded-lg">
               <div className="text-2xl font-bold text-red-400">3</div>
-              <p className="text-sm text-muted-foreground">Duplicates</p>
+              <p className="text-sm text-muted-foreground">{t('academicData.importSummary.duplicates')}</p>
             </div>
           </div>
 
           <div className="space-y-2 mb-6">
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium">Record Type:</span>
-              <span>{recordType || 'Not selected'}</span>
+              <span className="font-medium">{t('academicData.importSummary.recordType')}:</span>
+              <span>{recordType || t('academicData.importSettings.notSelected')}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium">College:</span>
-              <span>{colleges.find(c => c.id === college)?.name || 'Not selected'}</span>
+              <span className="font-medium">{t('academicData.importSummary.college')}:</span>
+              <span>{colleges.find(c => c.id === college)?.name || t('academicData.importSettings.notSelected')}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium">Department:</span>
-              <span>{getFilteredDepartments().find(d => d.id === department)?.name || 'Not selected'}</span>
+              <span className="font-medium">{t('academicData.importSummary.department')}:</span>
+              <span>{getFilteredDepartments().find(d => d.id === department)?.name || t('academicData.importSettings.notSelected')}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium">Specialization:</span>
-              <span>{getFilteredSpecializations().find(s => s.id === specialization)?.name || 'Not selected'}</span>
+              <span className="font-medium">{t('academicData.importSummary.specialization')}:</span>
+              <span>{getFilteredSpecializations().find(s => s.id === specialization)?.name || t('academicData.importSettings.notSelected')}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium">Batch:</span>
-              <span>{batch || 'Not selected'}</span>
+              <span className="font-medium">{t('academicData.importSummary.batch')}:</span>
+              <span>{batch || t('academicData.importSettings.notSelected')}</span>
             </div>
           </div>
 
           <div className="flex gap-4">
             <Button variant="outline" className="gap-2">
-              <Save className="h-4 w-4" />
-              Save Draft
+              {t('dir') === 'rtl' ? (
+                <>
+                  {t('academicData.importSummary.saveDraft')}
+                  <Save className="h-4 w-4" />
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  {t('academicData.importSummary.saveDraft')}
+                </>
+              )}
             </Button>
             <Button className="gap-2">
-              <Upload className="h-4 w-4" />
-              Import Records
+              {t('dir') === 'rtl' ? (
+                <>
+                  {t('academicData.importSummary.importRecords')}
+                  <Upload className="h-4 w-4" />
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4" />
+                  {t('academicData.importSummary.importRecords')}
+                </>
+              )}
             </Button>
           </div>
         </CardContent>

@@ -36,12 +36,11 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
       return createErrorResponse(validationResult.error, requestId, startTime);
     }
 
-    // Temporary dashboard fallback until full Firebase Auth is wired
     const authResult = {
       valid: true,
-      userId: context.auth?.uid || "dashboard_dev_user",
-      role: context.auth?.token?.role || "admin",
-      message: context.auth
+      userId: context?.auth?.uid || "dashboard_dev_user",
+      role: context?.auth?.token?.role || "admin",
+      message: context?.auth
         ? "Auth extracted from context (V1)"
         : "No auth context provided - using temporary dashboard fallback",
     };
@@ -72,54 +71,36 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
       return createBlockedResponse("Rate limit exceeded", requestId, startTime);
     }
 
-    // Try Gemini first
     let finalAnswer = "";
     let finalSource = "fallback";
     let finalConfidence = 0.0;
 
-    logger.info(`Starting Gemini attempt: ${requestId}`, {
-      requestId,
-      aiSettingsStatus: aiSettings.status,
-    });
-
     try {
-      logger.info(`Calling generateGeminiResponse: ${requestId}`, {
-        requestId,
-        questionLength: actualData.question?.length || 0,
-        questionType: actualData.questionType,
-      });
-
       const geminiAnswer = await generateGeminiResponse({
         question: actualData.question,
         questionType: actualData.questionType,
         aiSettings,
-      });
-
-      logger.info(`Gemini response received: ${requestId}`, {
         requestId,
-        geminiAnswerLength: geminiAnswer?.length || 0,
-        geminiAnswerPreview: geminiAnswer?.substring(0, 100) || "EMPTY",
       });
 
       if (geminiAnswer && geminiAnswer.trim()) {
         finalAnswer = geminiAnswer.trim();
         finalSource = "gemini";
         finalConfidence = Number(aiSettings.confidenceThreshold ?? 0.8);
-
-        logger.info(`Gemini successful: ${requestId}`, {
-          requestId,
-          finalAnswerLength: finalAnswer.length,
-          finalSource,
-          finalConfidence,
-        });
       } else {
         throw new Error("Gemini returned empty response");
       }
     } catch (geminiError) {
+      const geminiMessage =
+        geminiError?.message ||
+        geminiError?.response?.text ||
+        geminiError?.toString() ||
+        "Unknown Gemini error";
+
       logger.error(`Gemini failed, using fallback: ${requestId}`, {
         requestId,
-        error: geminiError.message,
-        errorStack: geminiError.stack,
+        error: geminiMessage,
+        errorStack: geminiError?.stack || null,
       });
 
       const fallbackResponse = generateFallbackResponse(
@@ -127,23 +108,10 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
         actualData.question
       );
 
-      finalAnswer = fallbackResponse.answer;
+      finalAnswer = `${fallbackResponse.answer}\n\n[Gemini error: ${geminiMessage}]`;
       finalSource = "fallback";
       finalConfidence = 0.0;
-
-      logger.info(`Fallback applied: ${requestId}`, {
-        requestId,
-        finalSource,
-        finalAnswerLength: finalAnswer.length,
-      });
     }
-
-    logger.info(`Final response prepared: ${requestId}`, {
-      requestId,
-      finalSource,
-      finalStatus: finalSource === "gemini" ? "success" : "fallback",
-      finalConfidence,
-    });
 
     try {
       await logUsage({
@@ -151,7 +119,7 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
         userId: authResult.userId,
         userRole: authResult.role,
         questionType: actualData.questionType,
-        question: actualData.question,
+        questionPreview: String(actualData.question || "").slice(0, 200),
         timestamp: new Date().toISOString(),
         responseTimeMs: Date.now() - startTime,
         source: finalSource,
@@ -192,18 +160,17 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
   }
 });
 
-async function generateGeminiResponse({ question, questionType, aiSettings }) {
-  const apiKey = "ضع_مفتاح_جمناي_هنا_مؤقتا";
+async function generateGeminiResponse({ question, questionType, aiSettings, requestId }) {
+  const apiKey = "AIzaSyDq0pZDDQx9IQUXjQitWkMq1cjZEHbVpMM";
 
   if (!apiKey) {
     throw new Error("Missing GEMINI_API_KEY");
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-  const responseStyle = aiSettings.responseStyle || "professional";
+  const responseStyle = String(aiSettings.responseStyle || "professional");
   const maxResponseLength = Number(aiSettings.maxResponseLength || 1000);
+  const safeQuestionType = String(questionType || "");
+  const safeQuestion = String(question || "").normalize("NFC");
 
   const prompt = `
 You are the AI assistant for Edu Mate dashboard.
@@ -212,22 +179,133 @@ Answer only within the allowed educational/admin context.
 Settings:
 - Response style: ${responseStyle}
 - Maximum response length: ${maxResponseLength} characters
-- Question type: ${questionType}
+- Question type: ${safeQuestionType}
 
 User question:
-${question}
+${safeQuestion}
 
 Instructions:
 - Be concise and useful
 - Stay within university/admin assistant context
 - Do not answer blocked or unsafe topics
 - Keep the answer under ${maxResponseLength} characters
-`;
+`.trim();
 
-  const result = await model.generateContent(prompt);
-  const text = result?.response?.text?.() || "";
+  const modelCandidates = [
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-pro-latest",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+  ];
 
-  return String(text).slice(0, maxResponseLength);
+  let lastError = null;
+
+  // محاولة 1: عبر SDK
+  for (const modelName of modelCandidates) {
+    try {
+      logger.info(`Gemini SDK attempt: ${requestId}`, {
+        requestId,
+        modelName,
+        questionType: safeQuestionType,
+        questionLength: safeQuestion.length,
+      });
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: modelName });
+
+      const result = await model.generateContent({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
+      });
+
+      const text = result?.response?.text?.() || "";
+      const finalText = String(text).trim();
+
+      if (finalText) {
+        return finalText.slice(0, maxResponseLength);
+      }
+
+      lastError = new Error(`Empty Gemini SDK response for model: ${modelName}`);
+    } catch (err) {
+      lastError = err;
+      logger.error(`Gemini SDK model failed: ${requestId}`, {
+        requestId,
+        modelName,
+        error: err?.message || String(err),
+      });
+    }
+  }
+
+  // محاولة 2: عبر REST API لتجاوز مشاكل SDK/ByteString
+  for (const modelName of modelCandidates) {
+    try {
+      logger.info(`Gemini REST attempt: ${requestId}`, {
+        requestId,
+        modelName,
+      });
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+          modelName
+        )}:generateContent?key=${encodeURIComponent(apiKey)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: prompt }],
+              },
+            ],
+            generationConfig: {
+              temperature: 0.4,
+              maxOutputTokens: Math.min(800, Math.max(128, Math.floor(maxResponseLength / 2))),
+            },
+          }),
+        }
+      );
+
+      const rawText = await response.text();
+
+      if (!response.ok) {
+        throw new Error(`REST ${response.status}: ${rawText}`);
+      }
+
+      let json;
+      try {
+        json = JSON.parse(rawText);
+      } catch {
+        throw new Error(`Invalid REST JSON response: ${rawText}`);
+      }
+
+      const text =
+        json?.candidates?.[0]?.content?.parts?.map((p) => p?.text || "").join("") || "";
+
+      const finalText = String(text).trim();
+
+      if (finalText) {
+        return finalText.slice(0, maxResponseLength);
+      }
+
+      lastError = new Error(`Empty Gemini REST response for model: ${modelName}`);
+    } catch (err) {
+      lastError = err;
+      logger.error(`Gemini REST model failed: ${requestId}`, {
+        requestId,
+        modelName,
+        error: err?.message || String(err),
+      });
+    }
+  }
+
+  throw lastError || new Error("All Gemini attempts failed");
 }
 
 function generateRequestId() {
@@ -260,7 +338,7 @@ function validateInput(data) {
     "announcement",
   ];
 
-  if (!validQuestionTypes.includes(data.questionType)) {
+  if (!validQuestionTypes.includes(String(data.questionType))) {
     return {
       valid: false,
       error: `Invalid question type: ${data.questionType}`,
