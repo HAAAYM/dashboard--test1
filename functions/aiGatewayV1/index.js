@@ -1,14 +1,19 @@
+const { defineSecret } = require("firebase-functions/params");
+const geminiApiKey = defineSecret("GEMINI_API_KEY");
 const functions = require("firebase-functions");
 const { logger } = functions;
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { defineSecret } = require("firebase-functions/params");
 
 // Initialize Firebase Admin
 initializeApp();
 const db = getFirestore();
 
-exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
+exports.aiGatewayV1 = functions
+  .runWith({ secrets: [geminiApiKey] })
+  .https.onCall(async (data, context) => {
   const startTime = Date.now();
   const requestId = generateRequestId();
 
@@ -76,17 +81,42 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
     let finalSource = "fallback";
     let finalConfidence = 0.0;
 
+    logger.info(`Starting Gemini attempt: ${requestId}`, {
+      requestId,
+      hasGeminiKey: !!geminiApiKey.value(),
+      aiSettingsStatus: aiSettings.status,
+    });
+
     try {
+      logger.info(`Calling generateGeminiResponse: ${requestId}`, {
+        requestId,
+        questionLength: actualData.question?.length || 0,
+        questionType: actualData.questionType,
+      });
+
       const geminiAnswer = await generateGeminiResponse({
         question: actualData.question,
         questionType: actualData.questionType,
         aiSettings,
       });
 
+      logger.info(`Gemini response received: ${requestId}`, {
+        requestId,
+        geminiAnswerLength: geminiAnswer?.length || 0,
+        geminiAnswerPreview: geminiAnswer?.substring(0, 100) || "EMPTY",
+      });
+
       if (geminiAnswer && geminiAnswer.trim()) {
         finalAnswer = geminiAnswer.trim();
         finalSource = "gemini";
         finalConfidence = Number(aiSettings.confidenceThreshold ?? 0.8);
+        
+        logger.info(`Gemini successful: ${requestId}`, {
+          requestId,
+          finalAnswerLength: finalAnswer.length,
+          finalSource,
+          finalConfidence,
+        });
       } else {
         throw new Error("Gemini returned empty response");
       }
@@ -94,6 +124,7 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
       logger.error(`Gemini failed, using fallback: ${requestId}`, {
         requestId,
         error: geminiError.message,
+        errorStack: geminiError.stack,
       });
 
       const fallbackResponse = generateFallbackResponse(
@@ -104,7 +135,20 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
       finalAnswer = fallbackResponse.answer;
       finalSource = "fallback";
       finalConfidence = 0.0;
+
+      logger.info(`Fallback applied: ${requestId}`, {
+        requestId,
+        finalSource,
+        finalAnswerLength: finalAnswer.length,
+      });
     }
+
+    logger.info(`Final response prepared: ${requestId}`, {
+      requestId,
+      finalSource,
+      finalStatus: finalSource === "gemini" ? "success" : "fallback",
+      finalConfidence,
+    });
 
     // Logging should never break the main response
     try {
@@ -155,7 +199,7 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
 });
 
 async function generateGeminiResponse({ question, questionType, aiSettings }) {
-  const apiKey = process.env.GEMINI_API_KEY;
+ const apiKey = geminiApiKey.value();
 
   if (!apiKey) {
     throw new Error("Missing GEMINI_API_KEY");

@@ -18,6 +18,7 @@ export default function AIChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
+  const [source, setSource] = useState<string>('');
 
   const handleSendQuestion = async () => {
     if (!question.trim()) return;
@@ -26,6 +27,7 @@ export default function AIChatPage() {
     setError(null);
     setBlockedReason(null);
     setAnswer('');
+      setSource('');
 
     try {
       // Call aiGatewayV1 Cloud Function with Firebase Functions SDK
@@ -43,19 +45,24 @@ export default function AIChatPage() {
         answer?: string;
         blockedReason?: string;
         errorMessage?: string;
+        source?: string;
       };
 
-      if (response.success === true && response.status === 'fallback') {
-        // Success response from V1
+      if (response.success === true && (response.status === 'fallback' || response.status === 'success')) {
+        // Success response from V1 (both fallback and Gemini)
         setAnswer(response.answer || '');
+        setSource(response.source || 'unknown');
       } else if (response.success === false && response.status === 'blocked') {
         // Blocked response from V1
         setBlockedReason(response.blockedReason || null);
+        setSource('');
       } else if (response.success === false && response.status === 'error') {
         // Error response from V1
         setError(response.errorMessage || null);
+        setSource('');
       } else {
         setError('Unexpected response format');
+        setSource('');
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -166,7 +173,7 @@ export default function AIChatPage() {
                   <div className="flex-1">
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{answer}</p>
                     <div className="mt-2 text-xs text-blue-600">
-                      Response from aiGatewayV1 (Fallback)
+                      Response from aiGatewayV1 ({source === 'gemini' ? 'Gemini AI' : source === 'fallback' ? 'Fallback' : 'Unknown'})
                     </div>
                   </div>
                 </div>
