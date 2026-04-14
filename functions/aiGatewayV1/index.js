@@ -2,128 +2,189 @@ const functions = require("firebase-functions");
 const { logger } = functions;
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Initialize Firebase Admin
 initializeApp();
 const db = getFirestore();
 
-exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
-  const startTime = Date.now();
-  const requestId = generateRequestId();
+exports.aiGatewayV1 = functions
+  .runWith({
+    secrets: ["GEMINI_API_KEY"],
+  })
+  .https.onCall(async (data, context) => {
+    const startTime = Date.now();
+    const requestId = generateRequestId();
 
-  try {
-    logger.info(`AI Gateway V1 - Request received: ${requestId}`, {
-      requestId,
-      dataType: typeof data,
-      dataKeys: data ? Object.keys(data) : [],
-      dataString: JSON.stringify(data ?? null),
-    });
-
-    // Support both:
-    // 1) { question, questionType }
-    // 2) { data: { question, questionType } }
-    const actualData = data?.data || data || {};
-
-    logger.info(`Actual data extracted: ${requestId}`, {
-      requestId,
-      actualDataType: typeof actualData,
-      actualDataKeys: Object.keys(actualData),
-      actualDataString: JSON.stringify(actualData ?? null),
-    });
-
-    const validationResult = validateInput(actualData);
-    if (!validationResult.valid) {
-      return createErrorResponse(validationResult.error, requestId, startTime);
-    }
-
-    // Temporary dashboard fallback until full Firebase Auth is wired
-    const authResult = {
-      valid: true,
-      userId: context.auth?.uid || "dashboard_dev_user",
-      role: context.auth?.token?.role || "admin",
-      message: context.auth
-        ? "Auth extracted from context (V1)"
-        : "No auth context provided - using temporary dashboard fallback",
-    };
-
-    const aiSettingsDoc = await db.collection("ai_settings").doc("global").get();
-    if (!aiSettingsDoc.exists) {
-      return createErrorResponse("AI settings not found", requestId, startTime);
-    }
-
-    const aiSettings = aiSettingsDoc.data() || {};
-
-    if (aiSettings.status === "disabled") {
-      return createBlockedResponse("AI is currently disabled", requestId, startTime);
-    }
-
-    const topicFilterResult = filterTopics(actualData.question, aiSettings.blockedTopics || []);
-    if (!topicFilterResult.allowed) {
-      return createBlockedResponse(topicFilterResult.reason, requestId, startTime);
-    }
-
-    const rateLimitResult = checkRateLimit(
-      authResult.userId,
-      authResult.role,
-      aiSettings.rateLimits || {}
-    );
-
-    if (!rateLimitResult.allowed) {
-      return createBlockedResponse("Rate limit exceeded", requestId, startTime);
-    }
-
-    const fallbackResponse = generateFallbackResponse(
-      actualData.questionType,
-      actualData.question
-    );
-
-    // Logging should never break the main response
     try {
-      await logUsage({
+      logger.info(`AI Gateway V1 - Request received: ${requestId}`, {
         requestId,
-        userId: authResult.userId,
-        userRole: authResult.role,
-        questionType: actualData.questionType,
-        question: actualData.question,
+        dataType: typeof data,
+        dataKeys: data ? Object.keys(data) : [],
+      });
+
+      const actualData = data?.data || data || {};
+
+      const validationResult = validateInput(actualData);
+      if (!validationResult.valid) {
+        return createErrorResponse(validationResult.error, requestId, startTime);
+      }
+
+      const authResult = {
+        valid: true,
+        userId: context.auth?.uid || "dashboard_dev_user",
+        role: context.auth?.token?.role || "admin",
+        message: context.auth
+          ? "Auth extracted from context (V1)"
+          : "No auth context provided - using temporary dashboard fallback",
+      };
+
+      const aiSettingsDoc = await db.collection("ai_settings").doc("global").get();
+      if (!aiSettingsDoc.exists) {
+        return createErrorResponse("AI settings not found", requestId, startTime);
+      }
+
+      const aiSettings = aiSettingsDoc.data() || {};
+
+      if (aiSettings.status === "disabled") {
+        return createBlockedResponse("AI is currently disabled", requestId, startTime);
+      }
+
+      const topicFilterResult = filterTopics(actualData.question, aiSettings.blockedTopics || []);
+      if (!topicFilterResult.allowed) {
+        return createBlockedResponse(topicFilterResult.reason, requestId, startTime);
+      }
+
+      const rateLimitResult = checkRateLimit(
+        authResult.userId,
+        authResult.role,
+        aiSettings.rateLimits || {}
+      );
+
+      if (!rateLimitResult.allowed) {
+        return createBlockedResponse("Rate limit exceeded", requestId, startTime);
+      }
+
+      // Try Gemini first
+      let finalAnswer = "";
+      let finalSource = "fallback";
+      let finalConfidence = 0.0;
+
+      try {
+        const geminiAnswer = await generateGeminiResponse({
+          question: actualData.question,
+          questionType: actualData.questionType,
+          aiSettings,
+        });
+
+        if (geminiAnswer && geminiAnswer.trim()) {
+          finalAnswer = geminiAnswer.trim();
+          finalSource = "gemini";
+          finalConfidence = Number(aiSettings.confidenceThreshold ?? 0.8);
+        } else {
+          throw new Error("Gemini returned empty response");
+        }
+      } catch (geminiError) {
+        logger.error(`Gemini failed, using fallback: ${requestId}`, {
+          requestId,
+          error: geminiError.message,
+        });
+
+        const fallbackResponse = generateFallbackResponse(
+          actualData.questionType,
+          actualData.question
+        );
+
+        finalAnswer = fallbackResponse.answer;
+        finalSource = "fallback";
+        finalConfidence = 0.0;
+      }
+
+      // Logging should never break the main response
+      try {
+        await logUsage({
+          requestId,
+          userId: authResult.userId,
+          userRole: authResult.role,
+          questionType: actualData.questionType,
+          question: actualData.question,
+          timestamp: new Date().toISOString(),
+          responseTimeMs: Date.now() - startTime,
+          source: finalSource,
+          success: true,
+          confidence: finalConfidence,
+          dataAccessed: [],
+          errorMessage: null,
+        });
+      } catch (logError) {
+        logger.error(`Usage logging failed but continuing: ${requestId}`, {
+          requestId,
+          error: logError.message,
+        });
+      }
+
+      return {
+        success: true,
+        status: finalSource === "gemini" ? "success" : "fallback",
+        answer: finalAnswer,
+        confidence: finalConfidence,
+        source: finalSource,
+        requestId,
         timestamp: new Date().toISOString(),
         responseTimeMs: Date.now() - startTime,
-        source: "fallback",
-        success: true,
-        confidence: 0.0,
-        dataAccessed: [],
-        errorMessage: null,
-      });
-    } catch (logError) {
-      logger.error(`Usage logging failed but continuing: ${requestId}`, {
+      };
+    } catch (error) {
+      logger.error(`AI Gateway V1 - Error: ${requestId}`, {
         requestId,
-        error: logError.message,
+        error: error.message,
+        stack: error.stack,
       });
+
+      return createErrorResponse(
+        `Internal server error: ${error.message}`,
+        requestId,
+        startTime
+      );
     }
+  });
 
-    return {
-      success: true,
-      status: "fallback",
-      answer: fallbackResponse.answer,
-      confidence: 0.0,
-      source: "fallback",
-      requestId,
-      timestamp: new Date().toISOString(),
-      responseTimeMs: Date.now() - startTime,
-    };
-  } catch (error) {
-    logger.error(`AI Gateway V1 - Error: ${requestId}`, {
-      requestId,
-      error: error.message,
-      stack: error.stack,
-    });
+async function generateGeminiResponse({ question, questionType, aiSettings }) {
+  const apiKey = process.env.GEMINI_API_KEY;
 
-    return createErrorResponse(
-      `Internal server error: ${error.message}`,
-      requestId,
-      startTime
-    );
+  if (!apiKey) {
+    throw new Error("Missing GEMINI_API_KEY secret");
   }
-});
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  const responseStyle = aiSettings.responseStyle || "professional";
+  const maxResponseLength = Number(aiSettings.maxResponseLength || 1000);
+
+  const prompt = `
+You are the AI assistant for Edu Mate dashboard.
+Answer only within the allowed educational/admin context.
+
+Settings:
+- Response style: ${responseStyle}
+- Maximum response length: ${maxResponseLength} characters
+- Question type: ${questionType}
+
+User question:
+${question}
+
+Instructions:
+- Be concise and useful
+- Stay within university/admin assistant context
+- Do not answer blocked or unsafe topics
+- Keep the answer under ${maxResponseLength} characters
+`;
+
+  const result = await model.generateContent(prompt);
+  const text = result?.response?.text?.() || "";
+
+  return String(text).slice(0, maxResponseLength);
+}
 
 function generateRequestId() {
   return "req_" + Date.now() + "_" + Math.random().toString(36).slice(2, 11);
