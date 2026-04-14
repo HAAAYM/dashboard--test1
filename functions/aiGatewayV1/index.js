@@ -1,5 +1,4 @@
-const { defineSecret } = require("firebase-functions/params");
-const geminiApiKey = defineSecret("GEMINI_API_KEY");
+
 const functions = require("firebase-functions");
 const { logger } = functions;
 const { initializeApp } = require("firebase-admin/app");
@@ -199,7 +198,7 @@ exports.aiGatewayV1 = functions
 });
 
 async function generateGeminiResponse({ question, questionType, aiSettings }) {
- const apiKey = geminiApiKey.value();
+ const apiKey = "AIzaSyDq0pZDDQx9IQUXjQitWkMq1cjZEHbVpMM";
 
   if (!apiKey) {
     throw new Error("Missing GEMINI_API_KEY");
