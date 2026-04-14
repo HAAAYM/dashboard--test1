@@ -22,6 +22,10 @@ import {
   Save
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { db } from '@/lib/firebase/client-config';
+import { collection, addDoc, doc, setDoc, getDocs, query, where, Timestamp, onSnapshot } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { useEffect } from 'react';
 
 export default function AcademicDataPage() {
   const { t } = useTranslation();
@@ -126,6 +130,36 @@ export default function AcademicDataPage() {
 
   const [fileColumns, setFileColumns] = useState<string[]>([]);
   const [columnMappings, setColumnMappings] = useState<Record<string, string>>({});
+  const [isImporting, setIsImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState<'draft' | 'processing' | 'completed' | 'failed'>('draft');
+  const [currentImportId, setCurrentImportId] = useState<string>('');
+  const [fileData, setFileData] = useState<any[]>([]);
+  const [specializationsData, setSpecializationsData] = useState<any[]>([]);
+  const [isLoadingSpecializations, setIsLoadingSpecializations] = useState(true);
+
+  // Fetch specializations from Firestore
+  useEffect(() => {
+    const fetchSpecializations = async () => {
+      try {
+        const specializationsQuery = query(
+          collection(db, 'specializations'),
+          where('isActive', '==', true)
+        );
+        const snapshot = await getDocs(specializationsQuery);
+        const specializations = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setSpecializationsData(specializations);
+      } catch (error) {
+        console.error('Error fetching specializations:', error);
+      } finally {
+        setIsLoadingSpecializations(false);
+      }
+    };
+
+    fetchSpecializations();
+  }, []);
 
   const getValidationBadge = (status: string) => {
     switch (status) {
@@ -179,23 +213,208 @@ export default function AcademicDataPage() {
   };
 
   const getFilteredSpecializations = () => {
-    return specializations[department as keyof typeof specializations] || [];
+    const filtered = specializationsData.filter(spec => {
+      return spec.collegeId === college && (!department || spec.departmentId === department);
+    });
+    return filtered;
+  };
+
+  const getSpecializationData = () => {
+    return specializationsData.find(spec => spec.id === specialization);
+  };
+
+  const getProgramDuration = () => {
+    if (!specialization) return '4';
+    const spec = getSpecializationData();
+    return spec?.durationYears?.toString() || '4';
+  };
+
+  const getStartAcademicYear = () => {
+    if (!batch || !specialization) return '2024/2025';
+    const spec = getSpecializationData();
+    const firstBatchStartYear = spec?.firstBatchStartYear || 2022;
+    const batchNumber = parseInt(batch);
+    const startYear = firstBatchStartYear + (batchNumber - 1);
+    return `${startYear}/${startYear + 1}`;
+  };
+
+  const getExpectedGraduation = () => {
+    if (!batch || !specialization) return '2030/2031';
+    const spec = getSpecializationData();
+    const firstBatchStartYear = spec?.firstBatchStartYear || 2022;
+    const batchNumber = parseInt(batch);
+    const duration = spec?.durationYears || 4;
+    const startYear = firstBatchStartYear + (batchNumber - 1);
+    const graduationYear = startYear + duration;
+    return `${graduationYear}/${graduationYear + 1}`;
   };
 
   const getFilteredBatches = () => {
     return batches[recordType as keyof typeof batches] || [];
   };
 
-  const getProgramDuration = () => {
-    if (!specialization) return '4';
-    const spec = specializations[department as keyof typeof specializations]?.find(s => s.id === specialization);
-    return spec?.duration?.toString() || '4';
+  const processFileData = () => {
+    const processedRecords = [];
+    
+    for (const row of fileData) {
+      const record: any = {
+        recordType,
+        academicId: row[columnMappings.academicId]?.trim(),
+        cardId: row[columnMappings.cardId]?.trim(),
+        fullName: row[columnMappings.fullName]?.trim()
+      };
+
+      // Validate required fields
+      if (!record.academicId || !record.cardId || !record.fullName) {
+        record.validationStatus = 'missing-field';
+      } else {
+        record.validationStatus = 'valid';
+      }
+
+      processedRecords.push(record);
+    }
+
+    return processedRecords;
   };
 
-  const getExpectedGraduation = () => {
-    if (!batch) return '2027';
-    const batchData = batches[recordType as keyof typeof batches]?.find(b => b.id === batch);
-    return batchData?.expectedGraduation?.toString() || '2027';
+  const handleImportRecords = async () => {
+    if (!selectedFile || !recordType || !college || !batch) {
+      alert(t('academicData.importSummary.missingRequiredFields'));
+      return;
+    }
+
+    // Check required column mappings
+    const requiredMappings = ['academicId', 'cardId', 'fullName'];
+    const missingMappings = requiredMappings.filter(field => !columnMappings[field]);
+    
+    if (missingMappings.length > 0) {
+      alert(t('academicData.importSummary.missingColumnMappings'));
+      return;
+    }
+
+    setIsImporting(true);
+    setImportStatus('processing');
+
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      
+      // Create import batch record
+      const specData = getSpecializationData();
+      const collegeData = colleges.find(c => c.id === college);
+      
+      const importData = {
+        fileName: selectedFile.name,
+        recordType,
+        college: collegeData?.name || '',
+        specializationId: specialization,
+        specializationName: specData?.name || '',
+        batchNumber: batch,
+        totalRows: fileData.length,
+        validRows: 0,
+        missingRows: 0,
+        duplicateRows: 0,
+        status: 'processing',
+        uploadedByUid: currentUser?.uid || null,
+        uploadedAt: Timestamp.now(),
+        errorMessage: null
+      };
+
+      const importDoc = await addDoc(collection(db, 'academic_imports'), importData);
+      setCurrentImportId(importDoc.id);
+
+      // Process and validate records
+      const processedRecords = await processFileData();
+      
+      // Check for duplicates
+      const { validRecords, duplicates, missingFields } = await checkDuplicates(processedRecords);
+
+      // Update import record with results
+      await setDoc(doc(db, 'academic_imports', importDoc.id), {
+        validRows: validRecords.length,
+        duplicateRows: duplicates.length,
+        missingRows: missingFields.length,
+        status: 'completed',
+        uploadedAt: Timestamp.now()
+      }, { merge: true });
+
+      // Save valid records to academic_records
+      for (const record of validRecords) {
+        await addDoc(collection(db, 'academic_records'), {
+          recordType,
+          academicId: record.academicId,
+          cardIdHash: record.cardId, // TODO: Replace with proper hashing implementation
+          fullName: record.fullName,
+          college: collegeData?.name || '',
+          specializationId: specialization,
+          specializationName: specData?.name || '',
+          batchNumber: batch,
+          startAcademicYear: getStartAcademicYear(),
+          expectedGraduationAcademicYear: getExpectedGraduation(),
+          programDurationYears: parseInt(getProgramDuration()),
+          sourceImportId: importDoc.id,
+          claimedByUid: null,
+          isActive: true,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now()
+        });
+      }
+
+      // Update preview data with processed results
+      setMockPreviewData([...validRecords, ...duplicates, ...missingFields].slice(0, 15));
+      setImportStatus('completed');
+      
+      alert(t('academicData.importSummary.importSuccess', { 
+        valid: validRecords.length, 
+        total: processedRecords.length 
+      }));
+
+    } catch (error) {
+      console.error('Import error:', error);
+      setImportStatus('failed');
+      
+      // Update import record with error
+      if (currentImportId) {
+        await setDoc(doc(db, 'academic_imports', currentImportId), {
+          status: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'Unknown error occurred',
+          uploadedAt: Timestamp.now()
+        }, { merge: true });
+      }
+      
+      alert(t('academicData.importSummary.importError'));
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const checkDuplicates = async (records: any[]) => {
+    const validRecords = [];
+    const duplicates = [];
+    const missingFields = [];
+    
+    // Get existing academic IDs from Firestore
+    const existingRecordsQuery = query(
+      collection(db, 'academic_records'),
+      where('recordType', '==', recordType),
+      where('academicId', 'in', records.map(r => r.academicId).filter(Boolean))
+    );
+    
+    const existingRecordsSnapshot = await getDocs(existingRecordsQuery);
+    const existingIds = new Set(existingRecordsSnapshot.docs.map(doc => doc.data().academicId));
+    
+    for (const record of records) {
+      if (record.validationStatus === 'missing-field') {
+        missingFields.push(record);
+      } else if (existingIds.has(record.academicId)) {
+        record.validationStatus = 'duplicate';
+        duplicates.push(record);
+      } else {
+        validRecords.push(record);
+      }
+    }
+    
+    return { validRecords, duplicates, missingFields };
   };
 
   const filteredData = mockPreviewData.filter(item =>
@@ -685,16 +904,28 @@ export default function AcademicDataPage() {
                 </>
               )}
             </Button>
-            <Button className="gap-2" onClick={() => alert(t('academicData.importSummary.importStarted'))}>
+            <Button 
+              className="gap-2" 
+              onClick={handleImportRecords}
+              disabled={isImporting || !selectedFile || !recordType || !college || !batch}
+            >
               {t('dir') === 'rtl' ? (
                 <>
-                  {t('academicData.importSummary.importRecords')}
-                  <Upload className="h-4 w-4" />
+                  {isImporting ? t('academicData.importSummary.importing') : t('academicData.importSummary.importRecords')}
+                  {isImporting ? (
+                    <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
                 </>
               ) : (
                 <>
-                  <Upload className="h-4 w-4" />
-                  {t('academicData.importSummary.importRecords')}
+                  {isImporting ? (
+                    <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  {isImporting ? t('academicData.importSummary.importing') : t('academicData.importSummary.importRecords')}
                 </>
               )}
             </Button>

@@ -248,7 +248,12 @@
       "batch": "Batch",
       "saveDraft": "Save Draft",
       "importRecords": "Import Records",
-      "importStarted": "Import process started successfully!"
+      "importStarted": "Import process started successfully!",
+      "importing": "Importing...",
+      "missingRequiredFields": "Please fill in all required fields and select a file",
+      "missingColumnMappings": "Please map all required columns (Academic ID, Card ID, Full Name)",
+      "importSuccess": "Successfully imported {{valid}} out of {{total}} records",
+      "importError": "Import failed. Please check your data and try again."
     },
     "recordTypes": {
       "students": "Students",
