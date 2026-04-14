@@ -796,7 +796,7 @@ export default function UserProfilePage() {
               </div>
             ) : (
               activityData.groups.map((group: UserGroup) => (
-              <div key={group.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div key={group.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center gap-4">
                   <div className="p-2 bg-primary/10 rounded-lg">
                     <Users className="h-6 w-6 text-primary" />
@@ -844,7 +844,7 @@ export default function UserProfilePage() {
               </div>
             ) : (
               activityData.warningsHistory.map((warning: UserWarning) => (
-              <div key={warning.id} className="flex items-start gap-4 p-4 border rounded-lg">
+                <div key={warning.id} className="flex items-start gap-4 p-4 border rounded-lg">
                 <div className="p-2 bg-orange-100 rounded-lg">
                   <AlertTriangle className="h-5 w-5 text-orange-600" />
                 </div>
@@ -889,7 +889,7 @@ export default function UserProfilePage() {
               </div>
             ) : (
               activityData.activities.map((activity: UserActivity) => (
-              <div key={activity.id} className="flex items-start gap-4 p-4 border rounded-lg">
+                <div key={activity.id} className="flex items-start gap-4 p-4 border rounded-lg">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <Activity className="h-5 w-5 text-blue-600" />
                 </div>
