@@ -30,10 +30,22 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
   try {
     logger.info(`AI Gateway V1 - Request received: ${requestId}`, {
       requestId,
+      dataType: typeof data,
+      dataKeys: Object.keys(data),
+      dataString: JSON.stringify(data, null, 2),
       questionType: data.questionType || "unknown",
     });
 
-    const validationResult = validateInput(data);
+    // Handle both direct payload and wrapped payload from httpsCallable
+    const actualData = data.data || data;
+    logger.info(`Actual data extracted: ${requestId}`, {
+      requestId,
+      hasDataProperty: !!data.data,
+      actualDataType: typeof actualData,
+      actualDataKeys: Object.keys(actualData),
+    });
+    
+    const validationResult = validateInput(actualData);
     logger.info(`Input validation completed: ${requestId}`, {
       requestId,
       valid: validationResult.valid,
@@ -91,7 +103,7 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
       blockedTopicsCount: aiSettings.blockedTopics?.length || 0,
     });
     
-    const topicFilterResult = filterTopics(data.question, aiSettings.blockedTopics || []);
+    const topicFilterResult = filterTopics(actualData.question, aiSettings.blockedTopics || []);
     logger.info(`Topic filtering completed: ${requestId}`, {
       requestId,
       allowed: topicFilterResult.allowed,
@@ -125,10 +137,10 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
 
     logger.info(`Generating fallback response: ${requestId}`, {
       requestId,
-      questionType: data.questionType,
+      questionType: actualData.questionType,
     });
     
-    const fallbackResponse = generateFallbackResponse(data.questionType, data.question);
+    const fallbackResponse = generateFallbackResponse(actualData.questionType, actualData.question);
     logger.info(`Fallback response generated: ${requestId}`, {
       requestId,
       answerLength: fallbackResponse.answer?.length || 0,
@@ -139,26 +151,26 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
     });
     
     try {
-  await logUsage({
-    requestId,
-    userId: authResult.userId,
-    userRole: authResult.role,
-    questionType: data.questionType,
-    question: data.question,
-    timestamp: new Date().toISOString(),
-    responseTimeMs: Date.now() - startTime,
-    source: "fallback",
-    success: true,
-    confidence: 0.0,
-    dataAccessed: [],
-    errorMessage: null,
-  });
-} catch (logError) {
-  logger.error(`Usage logging failed but continuing: ${requestId}`, {
-    requestId,
-    error: logError.message,
-  });
-}
+      await logUsage({
+        requestId,
+        userId: authResult.userId,
+        userRole: authResult.role,
+        questionType: actualData.questionType,
+        question: actualData.question,
+        timestamp: new Date().toISOString(),
+        responseTimeMs: Date.now() - startTime,
+        source: "fallback",
+        success: true,
+        confidence: 0.0,
+        dataAccessed: [],
+        errorMessage: null,
+      });
+    } catch (logError) {
+      logger.error(`Usage logging failed but continuing: ${requestId}`, {
+        requestId,
+        error: logError.message,
+      });
+    }
 
     logger.info(`Preparing final response: ${requestId}`, {
       requestId,
