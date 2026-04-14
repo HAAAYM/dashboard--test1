@@ -11,7 +11,9 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 initializeApp();
 const db = getFirestore();
 
-exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
+exports.aiGatewayV1 = functions
+  .runWith({ secrets: ["GEMINI_API_KEY"] })
+  .https.onCall(async (data, context) => {
   const startTime = Date.now();
   const requestId = generateRequestId();
 
