@@ -33,68 +33,99 @@ export default function AcademicDataPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Mock data
+  // Enhanced mock data
   const colleges = [
-    { id: 'eng', name: t('academicData.colleges.eng') },
-    { id: 'med', name: t('academicData.colleges.med') },
-    { id: 'sci', name: t('academicData.colleges.sci') },
-    { id: 'bus', name: t('academicData.colleges.bus') }
+    { id: 'eng', name: t('academicData.colleges.eng'), programDuration: 4 },
+    { id: 'med', name: t('academicData.colleges.med'), programDuration: 6 },
+    { id: 'sci', name: t('academicData.colleges.sci'), programDuration: 4 },
+    { id: 'bus', name: t('academicData.colleges.bus'), programDuration: 4 }
   ];
 
   const departments = {
     eng: [
-      { id: 'cs', name: t('academicData.departments.cs') },
-      { id: 'ce', name: t('academicData.departments.ce') },
-      { id: 'ee', name: t('academicData.departments.ee') }
+      { id: 'cs', name: t('academicData.departments.cs'), collegeId: 'eng' },
+      { id: 'ce', name: t('academicData.departments.ce'), collegeId: 'eng' },
+      { id: 'ee', name: t('academicData.departments.ee'), collegeId: 'eng' }
     ],
     med: [
-      { id: 'surgery', name: t('academicData.departments.surgery') },
-      { id: 'medicine', name: t('academicData.departments.medicine') },
-      { id: 'pediatrics', name: t('academicData.departments.pediatrics') }
+      { id: 'surgery', name: t('academicData.departments.surgery'), collegeId: 'med' },
+      { id: 'medicine', name: t('academicData.departments.medicine'), collegeId: 'med' },
+      { id: 'pediatrics', name: t('academicData.departments.pediatrics'), collegeId: 'med' }
+    ],
+    sci: [
+      { id: 'physics', name: t('academicData.departments.physics'), collegeId: 'sci' },
+      { id: 'chemistry', name: t('academicData.departments.chemistry'), collegeId: 'sci' },
+      { id: 'biology', name: t('academicData.departments.biology'), collegeId: 'sci' }
+    ],
+    bus: [
+      { id: 'finance', name: t('academicData.departments.finance'), collegeId: 'bus' },
+      { id: 'marketing', name: t('academicData.departments.marketing'), collegeId: 'bus' },
+      { id: 'hr', name: t('academicData.departments.hr'), collegeId: 'bus' }
     ]
   };
 
   const specializations = {
     cs: [
-      { id: 'ai', name: t('academicData.specializations.ai') },
-      { id: 'se', name: t('academicData.specializations.se') },
-      { id: 'ds', name: t('academicData.specializations.ds') }
+      { id: 'ai', name: t('academicData.specializations.ai'), departmentId: 'cs', duration: 4 },
+      { id: 'se', name: t('academicData.specializations.se'), departmentId: 'cs', duration: 4 },
+      { id: 'ds', name: t('academicData.specializations.ds'), departmentId: 'cs', duration: 4 }
     ],
     ce: [
-      { id: 'structural', name: t('academicData.specializations.structural') },
-      { id: 'transport', name: t('academicData.specializations.transport') }
+      { id: 'structural', name: t('academicData.specializations.structural'), departmentId: 'ce', duration: 4 },
+      { id: 'transport', name: t('academicData.specializations.transport'), departmentId: 'ce', duration: 4 }
+    ],
+    surgery: [
+      { id: 'general', name: t('academicData.specializations.generalSurgery'), departmentId: 'surgery', duration: 6 },
+      { id: 'cardio', name: t('academicData.specializations.cardioSurgery'), departmentId: 'surgery', duration: 7 }
     ]
   };
 
-  const mockPreviewData = [
-    {
-      academicId: '2023001',
-      fullName: 'Ahmed Mohammed Ali',
-      cardId: '1234567890',
-      college: 'College of Engineering',
-      specialization: 'Computer Science',
-      batch: '2023',
-      validationStatus: 'valid'
-    },
-    {
-      academicId: '2023002',
-      fullName: 'Fatima Hassan Omar',
-      cardId: '0987654321',
-      college: 'College of Engineering',
-      specialization: 'Computer Science',
-      batch: '2023',
-      validationStatus: 'missing-field'
-    },
-    {
-      academicId: '2023003',
-      fullName: 'Mohammed Khalid Ahmed',
-      cardId: '1122334455',
-      college: 'College of Engineering',
-      specialization: 'Computer Science',
-      batch: '2023',
-      validationStatus: 'duplicate'
+  const batches = {
+    students: [
+      { id: '2020', name: '2020', startYear: 2020, expectedGraduation: 2024 },
+      { id: '2021', name: '2021', startYear: 2021, expectedGraduation: 2025 },
+      { id: '2022', name: '2022', startYear: 2022, expectedGraduation: 2026 },
+      { id: '2023', name: '2023', startYear: 2023, expectedGraduation: 2027 },
+      { id: '2024', name: '2024', startYear: 2024, expectedGraduation: 2028 }
+    ],
+    doctors: [
+      { id: '2018', name: '2018', startYear: 2018, expectedGraduation: 2024 },
+      { id: '2019', name: '2019', startYear: 2019, expectedGraduation: 2025 },
+      { id: '2020', name: '2020', startYear: 2020, expectedGraduation: 2026 }
+    ]
+  };
+
+  const [mockPreviewData, setMockPreviewData] = useState<any[]>([]);
+  
+  const generateMockData = () => {
+    const firstNames = ['Ahmed', 'Fatima', 'Mohammed', 'Aisha', 'Khalid', 'Nora', 'Omar', 'Mariam'];
+    const lastNames = ['Al Hassan', 'Khalid', 'Mohammed', 'Ali', 'Omar', 'Ahmed', 'Saeed'];
+    const statuses = ['valid', 'missing-field', 'duplicate'];
+    
+    const data = [];
+    for (let i = 1; i <= 15; i++) {
+      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+      const college = colleges[Math.floor(Math.random() * colleges.length)];
+      
+      data.push({
+        academicId: `${batch || '2023'}${String(i).padStart(3, '0')}`,
+        fullName: `${firstName} ${lastName}`,
+        cardId: `${Math.floor(Math.random() * 9000000000) + 1000000000}`,
+        college: college.name,
+        specialization: college.id === 'eng' ? t('academicData.specializations.cs') : 
+                    college.id === 'med' ? t('academicData.specializations.generalSurgery') : 
+                    t('academicData.specializations.ai'),
+        batch: batch || '2023',
+        validationStatus: status
+      });
     }
-  ];
+    return data;
+  };
+
+  const [fileColumns, setFileColumns] = useState<string[]>([]);
+  const [columnMappings, setColumnMappings] = useState<Record<string, string>>({});
 
   const getValidationBadge = (status: string) => {
     switch (status) {
@@ -113,11 +144,34 @@ export default function AcademicDataPage() {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+      // Simulate file parsing to get columns
+      const mockColumns = ['Column A', 'Column B', 'Column C', 'Column D', 'Column E', 'Column F', 'Column G', 'Column H', 'Column I', 'Column J'];
+      setFileColumns(mockColumns);
+      // Generate mock preview data
+      setMockPreviewData(generateMockData());
     }
   };
 
   const handleRemoveFile = () => {
     setSelectedFile(null);
+    setFileColumns([]);
+    setMockPreviewData([]);
+    setColumnMappings({});
+  };
+
+  const handleCollegeChange = (value: string) => {
+    setCollege(value);
+    setDepartment('');
+    setSpecialization('');
+  };
+
+  const handleDepartmentChange = (value: string) => {
+    setDepartment(value);
+    setSpecialization('');
+  };
+
+  const handleColumnMapping = (field: string, column: string) => {
+    setColumnMappings(prev => ({ ...prev, [field]: column }));
   };
 
   const getFilteredDepartments = () => {
@@ -126,6 +180,22 @@ export default function AcademicDataPage() {
 
   const getFilteredSpecializations = () => {
     return specializations[department as keyof typeof specializations] || [];
+  };
+
+  const getFilteredBatches = () => {
+    return batches[recordType as keyof typeof batches] || [];
+  };
+
+  const getProgramDuration = () => {
+    if (!specialization) return '4';
+    const spec = specializations[department as keyof typeof specializations]?.find(s => s.id === specialization);
+    return spec?.duration?.toString() || '4';
+  };
+
+  const getExpectedGraduation = () => {
+    if (!batch) return '2027';
+    const batchData = batches[recordType as keyof typeof batches]?.find(b => b.id === batch);
+    return batchData?.expectedGraduation?.toString() || '2027';
   };
 
   const filteredData = mockPreviewData.filter(item =>
@@ -231,7 +301,7 @@ export default function AcademicDataPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('academicData.importSettings.college')}</label>
-              <Select value={college} onValueChange={setCollege}>
+              <Select value={college} onValueChange={handleCollegeChange}>
                 <SelectTrigger>
                   <SelectValue placeholder={t('academicData.importSettings.selectCollege')} />
                 </SelectTrigger>
@@ -249,7 +319,7 @@ export default function AcademicDataPage() {
               <label className="text-sm font-medium">{t('academicData.importSettings.department')}</label>
               <Select 
                 value={department} 
-                onValueChange={setDepartment}
+                onValueChange={handleDepartmentChange}
                 disabled={!college}
               >
                 <SelectTrigger>
@@ -298,12 +368,12 @@ export default function AcademicDataPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('academicData.importSettings.programDuration')}</label>
-              <Input value={t('academicData.importSettings.fourYears')} disabled />
+              <Input value={getProgramDuration() + ' ' + t('academicData.importSettings.years')} disabled />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('academicData.importSettings.expectedGraduation')}</label>
-              <Input value={t('academicData.importSettings.year2027')} disabled />
+              <Input value={getExpectedGraduation()} disabled />
             </div>
           </div>
         </CardContent>
@@ -373,39 +443,48 @@ export default function AcademicDataPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('academicData.columnMapping.academicId')} *</label>
-              <Select>
+              <Select value={columnMappings.academicId || ''} onValueChange={(value) => handleColumnMapping('academicId', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder={t('academicData.columnMapping.selectColumn')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="column1">{t('academicData.columnMapping.columnA')}: {t('academicData.columnMapping.studentId')}</SelectItem>
-                  <SelectItem value="column2">{t('academicData.columnMapping.columnB')}: {t('academicData.columnMapping.academicId')}</SelectItem>
+                  {fileColumns.map((col, index) => (
+                    <SelectItem key={col} value={col}>
+                      {col}: {t('academicData.columnMapping.academicId')}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('academicData.columnMapping.cardId')} *</label>
-              <Select>
+              <Select value={columnMappings.cardId || ''} onValueChange={(value) => handleColumnMapping('cardId', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder={t('academicData.columnMapping.selectColumn')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="column3">{t('academicData.columnMapping.columnC')}: {t('academicData.columnMapping.cardNumber')}</SelectItem>
-                  <SelectItem value="column4">{t('academicData.columnMapping.columnD')}: {t('academicData.columnMapping.idCard')}</SelectItem>
+                  {fileColumns.map((col, index) => (
+                    <SelectItem key={col} value={col}>
+                      {col}: {t('academicData.columnMapping.cardId')}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('academicData.columnMapping.fullName')} *</label>
-              <Select>
+              <Select value={columnMappings.fullName || ''} onValueChange={(value) => handleColumnMapping('fullName', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder={t('academicData.columnMapping.selectColumn')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="column5">{t('academicData.columnMapping.columnE')}: {t('academicData.columnMapping.name')}</SelectItem>
-                  <SelectItem value="column6">{t('academicData.columnMapping.columnF')}: {t('academicData.columnMapping.fullName')}</SelectItem>
+                  {fileColumns.map((col, index) => (
+                    <SelectItem key={col} value={col}>
+                      {col}: {t('academicData.columnMapping.fullName')}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -546,19 +625,25 @@ export default function AcademicDataPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="text-center p-4 bg-card border-border rounded-lg">
-              <div className="text-2xl font-bold text-foreground">150</div>
+              <div className="text-2xl font-bold text-foreground">{mockPreviewData.length}</div>
               <p className="text-sm text-muted-foreground">{t('academicData.importSummary.totalRows')}</p>
             </div>
             <div className="text-center p-4 bg-card border-border rounded-lg">
-              <div className="text-2xl font-bold text-green-400">142</div>
+              <div className="text-2xl font-bold text-green-400">
+                {mockPreviewData.filter(item => item.validationStatus === 'valid').length}
+              </div>
               <p className="text-sm text-muted-foreground">{t('academicData.importSummary.validRecords')}</p>
             </div>
             <div className="text-center p-4 bg-card border-border rounded-lg">
-              <div className="text-2xl font-bold text-yellow-400">5</div>
+              <div className="text-2xl font-bold text-yellow-400">
+                {mockPreviewData.filter(item => item.validationStatus === 'missing-field').length}
+              </div>
               <p className="text-sm text-muted-foreground">{t('academicData.importSummary.missingFields')}</p>
             </div>
             <div className="text-center p-4 bg-card border-border rounded-lg">
-              <div className="text-2xl font-bold text-red-400">3</div>
+              <div className="text-2xl font-bold text-red-400">
+                {mockPreviewData.filter(item => item.validationStatus === 'duplicate').length}
+              </div>
               <p className="text-sm text-muted-foreground">{t('academicData.importSummary.duplicates')}</p>
             </div>
           </div>
@@ -600,7 +685,7 @@ export default function AcademicDataPage() {
                 </>
               )}
             </Button>
-            <Button className="gap-2">
+            <Button className="gap-2" onClick={() => alert(t('academicData.importSummary.importStarted'))}>
               {t('dir') === 'rtl' ? (
                 <>
                   {t('academicData.importSummary.importRecords')}

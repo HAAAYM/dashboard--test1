@@ -2,7 +2,6 @@ const functions = require("firebase-functions");
 const { logger } = functions;
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Initialize Firebase Admin
 initializeApp();
@@ -13,21 +12,11 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
   const requestId = generateRequestId();
 
   try {
-    logger.info(`AI Gateway V1 - Request received: ${requestId}`, {
-      requestId,
-      dataType: typeof data,
-      dataKeys: data && typeof data === "object" ? Object.keys(data) : [],
-    });
-
-    // Support both:
-    // 1) { question, questionType }
-    // 2) { data: { question, questionType } }
     const actualData = data?.data || data || {};
 
-    logger.info(`Actual data extracted: ${requestId}`, {
+    logger.info(`AI Gateway request: ${requestId}`, {
       requestId,
-      actualDataType: typeof actualData,
-      actualDataKeys:
+      dataKeys:
         actualData && typeof actualData === "object" ? Object.keys(actualData) : [],
     });
 
@@ -40,9 +29,6 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
       valid: true,
       userId: context?.auth?.uid || "dashboard_dev_user",
       role: context?.auth?.token?.role || "admin",
-      message: context?.auth
-        ? "Auth extracted from context (V1)"
-        : "No auth context provided - using temporary dashboard fallback",
     };
 
     const aiSettingsDoc = await db.collection("ai_settings").doc("global").get();
@@ -83,31 +69,25 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
         requestId,
       });
 
-      if (geminiAnswer && geminiAnswer.trim()) {
-        finalAnswer = geminiAnswer.trim();
-        finalSource = "gemini";
-        finalConfidence = Number(aiSettings.confidenceThreshold ?? 0.8);
-      } else {
+      if (!geminiAnswer || !geminiAnswer.trim()) {
         throw new Error("Gemini returned empty response");
       }
+
+      finalAnswer = geminiAnswer.trim();
+      finalSource = "gemini";
+      finalConfidence = Number(aiSettings.confidenceThreshold ?? 0.8);
     } catch (geminiError) {
       const geminiMessage =
         geminiError?.message ||
-        geminiError?.response?.text ||
         geminiError?.toString() ||
         "Unknown Gemini error";
 
-      logger.error(`Gemini failed, using fallback: ${requestId}`, {
+      logger.error(`Gemini failed: ${requestId}`, {
         requestId,
         error: geminiMessage,
-        errorStack: geminiError?.stack || null,
       });
 
-      const fallbackResponse = generateFallbackResponse(
-        actualData.questionType,
-        actualData.question
-      );
-
+      const fallbackResponse = generateFallbackResponse(actualData.questionType);
       finalAnswer = `${fallbackResponse.answer}\n\n[Gemini error: ${geminiMessage}]`;
       finalSource = "fallback";
       finalConfidence = 0.0;
@@ -119,19 +99,17 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
         userId: authResult.userId,
         userRole: authResult.role,
         questionType: actualData.questionType,
-        questionPreview: String(actualData.question || "").slice(0, 200),
+        questionPreview: String(actualData.question || "").slice(0, 150),
         timestamp: new Date().toISOString(),
         responseTimeMs: Date.now() - startTime,
         source: finalSource,
         success: true,
         confidence: finalConfidence,
-        dataAccessed: [],
-        errorMessage: null,
       });
-    } catch (logError) {
-      logger.error(`Usage logging failed but continuing: ${requestId}`, {
+    } catch (e) {
+      logger.error(`Usage logging failed: ${requestId}`, {
         requestId,
-        error: logError.message,
+        error: e.message,
       });
     }
 
@@ -146,7 +124,7 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
       responseTimeMs: Date.now() - startTime,
     };
   } catch (error) {
-    logger.error(`AI Gateway V1 - Error: ${requestId}`, {
+    logger.error(`AI Gateway fatal error: ${requestId}`, {
       requestId,
       error: error.message,
       stack: error.stack,
@@ -161,11 +139,12 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
 });
 
 async function generateGeminiResponse({ question, questionType, aiSettings, requestId }) {
-  const apiKey = "AIzaSyDq0pZDDQx9IQUXjQitWkMq1cjZEHbVpMM";
+  const apiKey = "AIzaSyDmNyM_iG_vllHD66d_BdQu0pc6mgorkPA";
 
   if (!apiKey) {
     throw new Error("Missing GEMINI_API_KEY");
   }
+
 
   const responseStyle = String(aiSettings.responseStyle || "professional");
   const maxResponseLength = Number(aiSettings.maxResponseLength || 1000);
@@ -187,60 +166,13 @@ ${safeQuestion}
 Instructions:
 - Be concise and useful
 - Stay within university/admin assistant context
-- Do not answer blocked or unsafe topics
-- Keep the answer under ${maxResponseLength} characters
+- Keep the answer under ${maxResponseLength} characters.
 `.trim();
 
-  const modelCandidates = [
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-pro-latest",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
-  ];
+  const modelCandidates = ["gemini-2.5-flash", "gemini-2.5-pro"];
 
   let lastError = null;
 
-  // محاولة 1: عبر SDK
-  for (const modelName of modelCandidates) {
-    try {
-      logger.info(`Gemini SDK attempt: ${requestId}`, {
-        requestId,
-        modelName,
-        questionType: safeQuestionType,
-        questionLength: safeQuestion.length,
-      });
-
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: modelName });
-
-      const result = await model.generateContent({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
-          },
-        ],
-      });
-
-      const text = result?.response?.text?.() || "";
-      const finalText = String(text).trim();
-
-      if (finalText) {
-        return finalText.slice(0, maxResponseLength);
-      }
-
-      lastError = new Error(`Empty Gemini SDK response for model: ${modelName}`);
-    } catch (err) {
-      lastError = err;
-      logger.error(`Gemini SDK model failed: ${requestId}`, {
-        requestId,
-        modelName,
-        error: err?.message || String(err),
-      });
-    }
-  }
-
-  // محاولة 2: عبر REST API لتجاوز مشاكل SDK/ByteString
   for (const modelName of modelCandidates) {
     try {
       logger.info(`Gemini REST attempt: ${requestId}`, {
@@ -249,9 +181,7 @@ Instructions:
       });
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-          modelName
-        )}:generateContent?key=${encodeURIComponent(apiKey)}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`,
         {
           method: "POST",
           headers: {
@@ -264,40 +194,29 @@ Instructions:
                 parts: [{ text: prompt }],
               },
             ],
-            generationConfig: {
-              temperature: 0.4,
-              maxOutputTokens: Math.min(800, Math.max(128, Math.floor(maxResponseLength / 2))),
-            },
           }),
         }
       );
 
-      const rawText = await response.text();
+      const raw = await response.text();
 
       if (!response.ok) {
-        throw new Error(`REST ${response.status}: ${rawText}`);
+        throw new Error(`REST ${response.status}: ${raw}`);
       }
 
-      let json;
-      try {
-        json = JSON.parse(rawText);
-      } catch {
-        throw new Error(`Invalid REST JSON response: ${rawText}`);
-      }
-
+      const json = JSON.parse(raw);
       const text =
         json?.candidates?.[0]?.content?.parts?.map((p) => p?.text || "").join("") || "";
 
       const finalText = String(text).trim();
-
       if (finalText) {
         return finalText.slice(0, maxResponseLength);
       }
 
-      lastError = new Error(`Empty Gemini REST response for model: ${modelName}`);
+      lastError = new Error(`Empty response for model ${modelName}`);
     } catch (err) {
       lastError = err;
-      logger.error(`Gemini REST model failed: ${requestId}`, {
+      logger.error(`Gemini REST failed: ${requestId}`, {
         requestId,
         modelName,
         error: err?.message || String(err),
@@ -305,7 +224,7 @@ Instructions:
     }
   }
 
-  throw lastError || new Error("All Gemini attempts failed");
+  throw lastError || new Error("All Gemini models failed");
 }
 
 function generateRequestId() {
@@ -426,7 +345,4 @@ function createErrorResponse(errorMessage, requestId, startTime) {
 
 async function logUsage(logEntry) {
   await db.collection("ai_usage_logs").add(logEntry);
-  logger.info(`Usage logged: ${logEntry.requestId}`, {
-    requestId: logEntry.requestId,
-  });
 }

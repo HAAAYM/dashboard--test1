@@ -189,9 +189,11 @@
       "selectDepartment": "اختر القسم",
       "selectSpecialization": "اختر التخصص",
       "batchPlaceholder": "مثال: 2023",
+      "selectBatch": "اختر الدفعة",
       "notSelected": "لم يتم الاختيار",
       "fourYears": "4 سنوات",
-      "year2027": "2027"
+      "year2027": "2027",
+      "years": "سنوات"
     },
     "fileUpload": {
       "title": "رفع ملف",
@@ -256,7 +258,8 @@
       "specialization": "التخصص",
       "batch": "الدفعة",
       "saveDraft": "حفظ مسودة",
-      "importRecords": "استيراد السجلات"
+      "importRecords": "استيراد السجلات",
+      "importStarted": "تم بدء عملية الاستيراد بنجاح!"
     },
     "recordTypes": {
       "students": "الطلاب",
@@ -281,14 +284,22 @@
       "ee": "الهندسة الكهربائية",
       "surgery": "الجراحة",
       "medicine": "الطب الباطني",
-      "pediatrics": "طب الأطفال"
+      "pediatrics": "طب الأطفال",
+      "physics": "الفيزياء",
+      "chemistry": "الكيمياء",
+      "biology": "الأحياء",
+      "finance": "المالية",
+      "marketing": "التسويق",
+      "hr": "الموارد البشرية"
     },
     "specializations": {
       "ai": "الذكاء الاصطناعي",
       "se": "هندسة البرمجيات",
       "ds": "علم البيانات",
       "structural": "الهندسة الإنشائية",
-      "transport": "هندسة النقل"
+      "transport": "هندسة النقل",
+      "generalSurgery": "الجراحة العامة",
+      "cardioSurgery": "جراحة القلب والأوعية الدموية"
     }
   },
   "common": {

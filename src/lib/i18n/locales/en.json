@@ -178,9 +178,11 @@
       "selectDepartment": "Select department",
       "selectSpecialization": "Select specialization",
       "batchPlaceholder": "e.g., 2023",
+      "selectBatch": "Select batch",
       "notSelected": "Not selected",
       "fourYears": "4 years",
-      "year2027": "2027"
+      "year2027": "2027",
+      "years": "years"
     },
     "fileUpload": {
       "title": "Upload File",
@@ -245,7 +247,8 @@
       "specialization": "Specialization",
       "batch": "Batch",
       "saveDraft": "Save Draft",
-      "importRecords": "Import Records"
+      "importRecords": "Import Records",
+      "importStarted": "Import process started successfully!"
     },
     "recordTypes": {
       "students": "Students",
@@ -270,14 +273,22 @@
       "ee": "Electrical Engineering",
       "surgery": "Surgery",
       "medicine": "Internal Medicine",
-      "pediatrics": "Pediatrics"
+      "pediatrics": "Pediatrics",
+      "physics": "Physics",
+      "chemistry": "Chemistry",
+      "biology": "Biology",
+      "finance": "Finance",
+      "marketing": "Marketing",
+      "hr": "Human Resources"
     },
     "specializations": {
       "ai": "Artificial Intelligence",
       "se": "Software Engineering",
       "ds": "Data Science",
       "structural": "Structural Engineering",
-      "transport": "Transportation Engineering"
+      "transport": "Transportation Engineering",
+      "generalSurgery": "General Surgery",
+      "cardioSurgery": "Cardiovascular Surgery"
     }
   },
   "common": {
