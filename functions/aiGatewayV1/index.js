@@ -8,151 +8,157 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 initializeApp();
 const db = getFirestore();
 
-exports.aiGatewayV1 = functions
-  .runWith({
-    secrets: ["GEMINI_API_KEY"],
-  })
-  .https.onCall(async (data, context) => {
-    const startTime = Date.now();
-    const requestId = generateRequestId();
+exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
+  const startTime = Date.now();
+  const requestId = generateRequestId();
+
+  try {
+    logger.info(`AI Gateway V1 - Request received: ${requestId}`, {
+      requestId,
+      dataType: typeof data,
+      dataKeys: data ? Object.keys(data) : [],
+    });
+
+    // Support both:
+    // 1) { question, questionType }
+    // 2) { data: { question, questionType } }
+    const actualData = data?.data || data || {};
+
+    logger.info(`Actual data extracted: ${requestId}`, {
+      requestId,
+      actualDataType: typeof actualData,
+      actualDataKeys: Object.keys(actualData),
+    });
+
+    const validationResult = validateInput(actualData);
+    if (!validationResult.valid) {
+      return createErrorResponse(validationResult.error, requestId, startTime);
+    }
+
+    // Temporary dashboard fallback until full Firebase Auth is wired
+    const authResult = {
+      valid: true,
+      userId: context.auth?.uid || "dashboard_dev_user",
+      role: context.auth?.token?.role || "admin",
+      message: context.auth
+        ? "Auth extracted from context (V1)"
+        : "No auth context provided - using temporary dashboard fallback",
+    };
+
+    const aiSettingsDoc = await db.collection("ai_settings").doc("global").get();
+    if (!aiSettingsDoc.exists) {
+      return createErrorResponse("AI settings not found", requestId, startTime);
+    }
+
+    const aiSettings = aiSettingsDoc.data() || {};
+
+    if (aiSettings.status === "disabled") {
+      return createBlockedResponse("AI is currently disabled", requestId, startTime);
+    }
+
+    const topicFilterResult = filterTopics(actualData.question, aiSettings.blockedTopics || []);
+    if (!topicFilterResult.allowed) {
+      return createBlockedResponse(topicFilterResult.reason, requestId, startTime);
+    }
+
+    const rateLimitResult = checkRateLimit(
+      authResult.userId,
+      authResult.role,
+      aiSettings.rateLimits || {}
+    );
+
+    if (!rateLimitResult.allowed) {
+      return createBlockedResponse("Rate limit exceeded", requestId, startTime);
+    }
+
+    // Try Gemini first
+    let finalAnswer = "";
+    let finalSource = "fallback";
+    let finalConfidence = 0.0;
 
     try {
-      logger.info(`AI Gateway V1 - Request received: ${requestId}`, {
-        requestId,
-        dataType: typeof data,
-        dataKeys: data ? Object.keys(data) : [],
+      const geminiAnswer = await generateGeminiResponse({
+        question: actualData.question,
+        questionType: actualData.questionType,
+        aiSettings,
       });
 
-      const actualData = data?.data || data || {};
-
-      const validationResult = validateInput(actualData);
-      if (!validationResult.valid) {
-        return createErrorResponse(validationResult.error, requestId, startTime);
+      if (geminiAnswer && geminiAnswer.trim()) {
+        finalAnswer = geminiAnswer.trim();
+        finalSource = "gemini";
+        finalConfidence = Number(aiSettings.confidenceThreshold ?? 0.8);
+      } else {
+        throw new Error("Gemini returned empty response");
       }
+    } catch (geminiError) {
+      logger.error(`Gemini failed, using fallback: ${requestId}`, {
+        requestId,
+        error: geminiError.message,
+      });
 
-      const authResult = {
-        valid: true,
-        userId: context.auth?.uid || "dashboard_dev_user",
-        role: context.auth?.token?.role || "admin",
-        message: context.auth
-          ? "Auth extracted from context (V1)"
-          : "No auth context provided - using temporary dashboard fallback",
-      };
-
-      const aiSettingsDoc = await db.collection("ai_settings").doc("global").get();
-      if (!aiSettingsDoc.exists) {
-        return createErrorResponse("AI settings not found", requestId, startTime);
-      }
-
-      const aiSettings = aiSettingsDoc.data() || {};
-
-      if (aiSettings.status === "disabled") {
-        return createBlockedResponse("AI is currently disabled", requestId, startTime);
-      }
-
-      const topicFilterResult = filterTopics(actualData.question, aiSettings.blockedTopics || []);
-      if (!topicFilterResult.allowed) {
-        return createBlockedResponse(topicFilterResult.reason, requestId, startTime);
-      }
-
-      const rateLimitResult = checkRateLimit(
-        authResult.userId,
-        authResult.role,
-        aiSettings.rateLimits || {}
+      const fallbackResponse = generateFallbackResponse(
+        actualData.questionType,
+        actualData.question
       );
 
-      if (!rateLimitResult.allowed) {
-        return createBlockedResponse("Rate limit exceeded", requestId, startTime);
-      }
+      finalAnswer = fallbackResponse.answer;
+      finalSource = "fallback";
+      finalConfidence = 0.0;
+    }
 
-      // Try Gemini first
-      let finalAnswer = "";
-      let finalSource = "fallback";
-      let finalConfidence = 0.0;
-
-      try {
-        const geminiAnswer = await generateGeminiResponse({
-          question: actualData.question,
-          questionType: actualData.questionType,
-          aiSettings,
-        });
-
-        if (geminiAnswer && geminiAnswer.trim()) {
-          finalAnswer = geminiAnswer.trim();
-          finalSource = "gemini";
-          finalConfidence = Number(aiSettings.confidenceThreshold ?? 0.8);
-        } else {
-          throw new Error("Gemini returned empty response");
-        }
-      } catch (geminiError) {
-        logger.error(`Gemini failed, using fallback: ${requestId}`, {
-          requestId,
-          error: geminiError.message,
-        });
-
-        const fallbackResponse = generateFallbackResponse(
-          actualData.questionType,
-          actualData.question
-        );
-
-        finalAnswer = fallbackResponse.answer;
-        finalSource = "fallback";
-        finalConfidence = 0.0;
-      }
-
-      // Logging should never break the main response
-      try {
-        await logUsage({
-          requestId,
-          userId: authResult.userId,
-          userRole: authResult.role,
-          questionType: actualData.questionType,
-          question: actualData.question,
-          timestamp: new Date().toISOString(),
-          responseTimeMs: Date.now() - startTime,
-          source: finalSource,
-          success: true,
-          confidence: finalConfidence,
-          dataAccessed: [],
-          errorMessage: null,
-        });
-      } catch (logError) {
-        logger.error(`Usage logging failed but continuing: ${requestId}`, {
-          requestId,
-          error: logError.message,
-        });
-      }
-
-      return {
-        success: true,
-        status: finalSource === "gemini" ? "success" : "fallback",
-        answer: finalAnswer,
-        confidence: finalConfidence,
-        source: finalSource,
+    // Logging should never break the main response
+    try {
+      await logUsage({
         requestId,
+        userId: authResult.userId,
+        userRole: authResult.role,
+        questionType: actualData.questionType,
+        question: actualData.question,
         timestamp: new Date().toISOString(),
         responseTimeMs: Date.now() - startTime,
-      };
-    } catch (error) {
-      logger.error(`AI Gateway V1 - Error: ${requestId}`, {
-        requestId,
-        error: error.message,
-        stack: error.stack,
+        source: finalSource,
+        success: true,
+        confidence: finalConfidence,
+        dataAccessed: [],
+        errorMessage: null,
       });
-
-      return createErrorResponse(
-        `Internal server error: ${error.message}`,
+    } catch (logError) {
+      logger.error(`Usage logging failed but continuing: ${requestId}`, {
         requestId,
-        startTime
-      );
+        error: logError.message,
+      });
     }
-  });
+
+    return {
+      success: true,
+      status: finalSource === "gemini" ? "success" : "fallback",
+      answer: finalAnswer,
+      confidence: finalConfidence,
+      source: finalSource,
+      requestId,
+      timestamp: new Date().toISOString(),
+      responseTimeMs: Date.now() - startTime,
+    };
+  } catch (error) {
+    logger.error(`AI Gateway V1 - Error: ${requestId}`, {
+      requestId,
+      error: error.message,
+      stack: error.stack,
+    });
+
+    return createErrorResponse(
+      `Internal server error: ${error.message}`,
+      requestId,
+      startTime
+    );
+  }
+});
 
 async function generateGeminiResponse({ question, questionType, aiSettings }) {
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    throw new Error("Missing GEMINI_API_KEY secret");
+    throw new Error("Missing GEMINI_API_KEY");
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
