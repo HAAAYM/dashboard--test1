@@ -27,7 +27,8 @@ import {
   Bot, 
   Settings,
   Shield,
-  Bell
+  Bell,
+  Database
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -82,6 +83,11 @@ const navigation = [
         titleKey: 'sidebar.library',
         url: '/dashboard/library',
         icon: Library,
+      },
+      {
+        titleKey: 'Academic Data',
+        url: '/dashboard/academic-data',
+        icon: Database,
       },
     ],
   },

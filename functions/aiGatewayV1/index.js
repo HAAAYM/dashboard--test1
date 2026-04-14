@@ -5,15 +5,13 @@ const { logger } = functions;
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { defineSecret } = require("firebase-functions/params");
+
 
 // Initialize Firebase Admin
 initializeApp();
 const db = getFirestore();
 
-exports.aiGatewayV1 = functions
-  .runWith({ secrets: [geminiApiKey] })
-  .https.onCall(async (data, context) => {
+exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
   const startTime = Date.now();
   const requestId = generateRequestId();
 
