@@ -7,22 +7,6 @@ const { getFirestore } = require("firebase-admin/firestore");
 initializeApp();
 const db = getFirestore();
 
-/**
- * AI Gateway V1 - Skeleton Implementation
- *
- * Purpose: Test basic AI Gateway flow without Gemini integration
- * Features: Auth validation, role checking, AI status, topic filtering, rate limiting, fallback responses
- *
- * V1 Limitations:
- * - No Gemini API integration
- * - No academic data fetching
- * - Mock responses only
- * - Basic rate limiting (in-memory)
- *
- * Next Steps (V2): Add Gemini integration
- * Next Steps (V3): Add academic data fetching
- */
-
 exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
   const startTime = Date.now();
   const requestId = generateRequestId();
@@ -31,125 +15,69 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
     logger.info(`AI Gateway V1 - Request received: ${requestId}`, {
       requestId,
       dataType: typeof data,
-      dataKeys: Object.keys(data),
-      dataString: JSON.stringify(data, null, 2),
-      questionType: data.questionType || "unknown",
+      dataKeys: data ? Object.keys(data) : [],
+      dataString: JSON.stringify(data ?? null),
     });
 
-    // Handle both direct payload and wrapped payload from httpsCallable
-    const actualData = data.data || data;
+    // Support both:
+    // 1) { question, questionType }
+    // 2) { data: { question, questionType } }
+    const actualData = data?.data || data || {};
+
     logger.info(`Actual data extracted: ${requestId}`, {
       requestId,
-      hasDataProperty: !!data.data,
       actualDataType: typeof actualData,
       actualDataKeys: Object.keys(actualData),
+      actualDataString: JSON.stringify(actualData ?? null),
     });
-    
+
     const validationResult = validateInput(actualData);
-    logger.info(`Input validation completed: ${requestId}`, {
-      requestId,
-      valid: validationResult.valid,
-      error: validationResult.error || null,
-    });
-    
     if (!validationResult.valid) {
       return createErrorResponse(validationResult.error, requestId, startTime);
     }
 
-    // Temporary V1 dashboard fallback:
-    // allow requests even when no Firebase Auth context is present yet.
+    // Temporary dashboard fallback until full Firebase Auth is wired
     const authResult = {
-  valid: true,
-  userId: context.auth?.uid || "dashboard_dev_user",
-  role: context.auth?.token?.role || "admin",
-  message: context.auth
-    ? "Auth extracted from context (V1)"
-    : "No auth context provided - using temporary dashboard fallback",
-};
+      valid: true,
+      userId: context.auth?.uid || "dashboard_dev_user",
+      role: context.auth?.token?.role || "admin",
+      message: context.auth
+        ? "Auth extracted from context (V1)"
+        : "No auth context provided - using temporary dashboard fallback",
+    };
 
-    logger.info(`Auth result prepared: ${requestId}`, {
-      requestId,
-      userId: authResult.userId,
-      role: authResult.role,
-    });
-
-    logger.info(`Loading AI settings: ${requestId}`, {
-      requestId,
-    });
-    
     const aiSettingsDoc = await db.collection("ai_settings").doc("global").get();
-    logger.info(`AI settings document fetched: ${requestId}`, {
-      requestId,
-      exists: aiSettingsDoc.exists,
-    });
-    
     if (!aiSettingsDoc.exists) {
       return createErrorResponse("AI settings not found", requestId, startTime);
     }
 
-    const aiSettings = aiSettingsDoc.data();
-    logger.info(`AI Settings loaded: ${requestId}`, {
-      requestId,
-      status: aiSettings.status,
-      enabledTopics: aiSettings.allowedTopics?.length || 0,
-    });
+    const aiSettings = aiSettingsDoc.data() || {};
 
     if (aiSettings.status === "disabled") {
       return createBlockedResponse("AI is currently disabled", requestId, startTime);
     }
 
-    logger.info(`Starting topic filtering: ${requestId}`, {
-      requestId,
-      blockedTopicsCount: aiSettings.blockedTopics?.length || 0,
-    });
-    
     const topicFilterResult = filterTopics(actualData.question, aiSettings.blockedTopics || []);
-    logger.info(`Topic filtering completed: ${requestId}`, {
-      requestId,
-      allowed: topicFilterResult.allowed,
-      reason: topicFilterResult.reason || null,
-    });
-    
     if (!topicFilterResult.allowed) {
       return createBlockedResponse(topicFilterResult.reason, requestId, startTime);
     }
 
-    logger.info(`Starting rate limit check: ${requestId}`, {
-      requestId,
-      userId: authResult.userId,
-      role: authResult.role,
-    });
-    
     const rateLimitResult = checkRateLimit(
       authResult.userId,
       authResult.role,
       aiSettings.rateLimits || {}
     );
-    logger.info(`Rate limit check completed: ${requestId}`, {
-      requestId,
-      allowed: rateLimitResult.allowed,
-      limit: rateLimitResult.limit,
-    });
-    
+
     if (!rateLimitResult.allowed) {
       return createBlockedResponse("Rate limit exceeded", requestId, startTime);
     }
 
-    logger.info(`Generating fallback response: ${requestId}`, {
-      requestId,
-      questionType: actualData.questionType,
-    });
-    
-    const fallbackResponse = generateFallbackResponse(actualData.questionType, actualData.question);
-    logger.info(`Fallback response generated: ${requestId}`, {
-      requestId,
-      answerLength: fallbackResponse.answer?.length || 0,
-    });
+    const fallbackResponse = generateFallbackResponse(
+      actualData.questionType,
+      actualData.question
+    );
 
-    logger.info(`Starting usage logging: ${requestId}`, {
-      requestId,
-    });
-    
+    // Logging should never break the main response
     try {
       await logUsage({
         requestId,
@@ -171,12 +99,6 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
         error: logError.message,
       });
     }
-
-    logger.info(`Preparing final response: ${requestId}`, {
-      requestId,
-      success: true,
-      status: "fallback",
-    });
 
     return {
       success: true,
@@ -203,10 +125,8 @@ exports.aiGatewayV1 = functions.https.onCall(async (data, context) => {
   }
 });
 
-// === HELPER FUNCTIONS ===
-
 function generateRequestId() {
-  return "req_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+  return "req_" + Date.now() + "_" + Math.random().toString(36).slice(2, 11);
 }
 
 function validateInput(data) {
@@ -240,10 +160,10 @@ function validateInput(data) {
 }
 
 function filterTopics(question, blockedTopics) {
-  const questionLower = question.toLowerCase();
+  const questionLower = String(question || "").toLowerCase();
 
   for (const blockedTopic of blockedTopics) {
-    if (questionLower.includes(blockedTopic.toLowerCase())) {
+    if (questionLower.includes(String(blockedTopic).toLowerCase())) {
       return {
         allowed: false,
         reason: `Question contains blocked topic: ${blockedTopic}`,
@@ -316,15 +236,8 @@ function createErrorResponse(errorMessage, requestId, startTime) {
 }
 
 async function logUsage(logEntry) {
-  try {
-    await db.collection("ai_usage_logs").add(logEntry);
-    logger.info(`Usage logged: ${logEntry.requestId}`, {
-      requestId: logEntry.requestId,
-    });
-  } catch (error) {
-    logger.error(`Failed to log usage: ${logEntry.requestId}`, {
-      requestId: logEntry.requestId,
-      error: error.message,
-    });
-  }
+  await db.collection("ai_usage_logs").add(logEntry);
+  logger.info(`Usage logged: ${logEntry.requestId}`, {
+    requestId: logEntry.requestId,
+  });
 }
