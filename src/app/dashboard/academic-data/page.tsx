@@ -97,13 +97,13 @@ export default function AcademicDataPage() {
   const getValidationBadge = (status: string) => {
     switch (status) {
       case 'valid':
-        return <Badge className="bg-green-100 text-green-800">Valid</Badge>;
+        return <Badge className="bg-green-900 text-green-100 border-green-800">Valid</Badge>;
       case 'missing-field':
-        return <Badge className="bg-yellow-100 text-yellow-800">Missing Field</Badge>;
+        return <Badge className="bg-yellow-900 text-yellow-100 border-yellow-800">Missing Field</Badge>;
       case 'duplicate':
-        return <Badge className="bg-red-100 text-red-800">Duplicate</Badge>;
+        return <Badge className="bg-red-900 text-red-100 border-red-800">Duplicate</Badge>;
       default:
-        return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>;
+        return <Badge className="bg-gray-800 text-gray-100 border-gray-700">Unknown</Badge>;
     }
   };
 
@@ -307,13 +307,13 @@ export default function AcademicDataPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+            <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <div className="space-y-2">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Drag and drop your file here, or click to browse
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Supported formats: .csv, .xlsx, .xls
               </p>
               <input
@@ -332,12 +332,12 @@ export default function AcademicDataPage() {
           </div>
 
           {selectedFile && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <div className="mt-4 p-4 bg-card border rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-medium">{selectedFile.name}</span>
-                  <span className="text-xs text-gray-500">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground">{selectedFile.name}</span>
+                  <span className="text-xs text-muted-foreground">
                     ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                   </span>
                 </div>
@@ -470,39 +470,39 @@ export default function AcademicDataPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <tr className="border-b bg-muted">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Academic ID
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Full Name
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Card ID
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       College
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Specialization
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Batch
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Status
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-background divide-y divide-border">
                   {filteredData.map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm">{item.academicId}</td>
-                      <td className="px-4 py-3 text-sm">{item.fullName}</td>
-                      <td className="px-4 py-3 text-sm">{item.cardId}</td>
-                      <td className="px-4 py-3 text-sm">{item.college}</td>
-                      <td className="px-4 py-3 text-sm">{item.specialization}</td>
-                      <td className="px-4 py-3 text-sm">{item.batch}</td>
+                    <tr key={index} className="hover:bg-muted/50">
+                      <td className="px-4 py-3 text-sm text-foreground">{item.academicId}</td>
+                      <td className="px-4 py-3 text-sm text-foreground">{item.fullName}</td>
+                      <td className="px-4 py-3 text-sm text-foreground">{item.cardId}</td>
+                      <td className="px-4 py-3 text-sm text-foreground">{item.college}</td>
+                      <td className="px-4 py-3 text-sm text-foreground">{item.specialization}</td>
+                      <td className="px-4 py-3 text-sm text-foreground">{item.batch}</td>
                       <td className="px-4 py-3 text-sm">
                         {getValidationBadge(item.validationStatus)}
                       </td>
@@ -525,21 +525,21 @@ export default function AcademicDataPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold">150</div>
-              <p className="text-sm text-gray-600">Total Rows</p>
+            <div className="text-center p-4 bg-card border rounded-lg">
+              <div className="text-2xl font-bold text-foreground">150</div>
+              <p className="text-sm text-muted-foreground">Total Rows</p>
             </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">142</div>
-              <p className="text-sm text-gray-600">Valid Records</p>
+            <div className="text-center p-4 bg-card border rounded-lg">
+              <div className="text-2xl font-bold text-green-400">142</div>
+              <p className="text-sm text-muted-foreground">Valid Records</p>
             </div>
-            <div className="text-center p-4 bg-yellow-50 rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600">5</div>
-              <p className="text-sm text-gray-600">Missing Fields</p>
+            <div className="text-center p-4 bg-card border rounded-lg">
+              <div className="text-2xl font-bold text-yellow-400">5</div>
+              <p className="text-sm text-muted-foreground">Missing Fields</p>
             </div>
-            <div className="text-center p-4 bg-red-50 rounded-lg">
-              <div className="text-2xl font-bold text-red-600">3</div>
-              <p className="text-sm text-gray-600">Duplicates</p>
+            <div className="text-center p-4 bg-card border rounded-lg">
+              <div className="text-2xl font-bold text-red-400">3</div>
+              <p className="text-sm text-muted-foreground">Duplicates</p>
             </div>
           </div>
 
